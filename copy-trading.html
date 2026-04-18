@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Copy Trading · MX1 Exchange</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .hero-banner {
+    position: relative;
+    padding: 40px 40px;
+    border-radius: 16px;
+    background:
+      radial-gradient(ellipse 600px 300px at 10% 50%, rgba(37, 99, 235, 0.3), transparent 70%),
+      radial-gradient(ellipse 500px 300px at 90% 50%, rgba(16, 185, 129, 0.25), transparent 70%),
+      linear-gradient(135deg, rgba(15, 32, 56, 0.9), rgba(10, 22, 40, 0.9));
+    border: 1px solid var(--border);
+    overflow: hidden;
+    display: grid; grid-template-columns: 1fr 320px; gap: 30px; align-items: center;
+    margin-bottom: 22px;
+  }
+  .hero-banner::after {
+    content: ''; position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(56,189,248,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask: radial-gradient(ellipse at center, black 30%, transparent 80%);
+    pointer-events: none;
+  }
+  .hero-banner h1 {
+    font-family: var(--font-display); font-size: 34px; font-weight: 800; letter-spacing: 1.5px;
+    margin-bottom: 12px; position: relative; z-index: 1;
+  }
+  .hero-banner h1 .grad { background: var(--grad-logo); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero-banner p { color: var(--text-dim); font-size: 14px; line-height: 1.6; max-width: 580px; position: relative; z-index: 1; }
+  .hero-stats-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .hero-stat-box { padding: 14px; background: rgba(3, 7, 15, 0.5); border: 1px solid var(--border); border-radius: 10px; }
+  .hero-stat-box .v { font-family: var(--font-mono); font-size: 20px; font-weight: 700; background: var(--grad-logo); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero-stat-box .l { font-size: 10px; color: var(--text-faint); letter-spacing: 0.6px; text-transform: uppercase; margin-top: 4px; font-weight: 600; }
+
+  .filter-bar {
+    display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap;
+  }
+  .filter-bar .tabs { flex: 0 0 auto; }
+  .filter-bar select { padding: 8px 14px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 12px; outline: none; }
+
+  .traders-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 14px;
+  }
+  .trader-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 0; overflow: hidden;
+    transition: all 0.2s; cursor: pointer;
+    position: relative;
+  }
+  .trader-card:hover { border-color: var(--border-hi); transform: translateY(-2px); box-shadow: 0 10px 40px rgba(37, 99, 235, 0.15); }
+  .trader-card .banner {
+    height: 64px; position: relative;
+  }
+  .trader-card .banner::after {
+    content: ''; position: absolute; inset: 0;
+    background-image: linear-gradient(90deg, rgba(0,0,0,0.2), transparent 50%, rgba(0,0,0,0.4));
+  }
+  .trader-card .rank {
+    position: absolute; top: 10px; right: 10px; padding: 4px 10px;
+    background: rgba(3, 7, 15, 0.6); backdrop-filter: blur(6px);
+    border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+    color: var(--amber); z-index: 1; border: 1px solid rgba(251, 191, 36, 0.3);
+  }
+  .trader-card .avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    position: absolute; top: 36px; left: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 18px; color: white;
+    border: 3px solid var(--bg-1);
+    font-family: var(--font-display);
+    z-index: 1;
+  }
+  .trader-card .body { padding: 16px 16px 14px 80px; }
+  .trader-card .name { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+  .trader-card .verified { color: var(--sky); display: inline-flex; }
+  .trader-card .handle { color: var(--text-faint); font-size: 11px; margin-top: 2px; font-family: var(--font-mono); }
+  .trader-card .stats { padding: 14px 16px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: rgba(3, 7, 15, 0.25); }
+  .trader-card .stat .v { font-family: var(--font-mono); font-weight: 700; font-size: 14px; }
+  .trader-card .stat .l { font-size: 10px; color: var(--text-faint); letter-spacing: 0.5px; text-transform: uppercase; margin-top: 2px; font-weight: 600; }
+  .trader-card .chart-mini { height: 50px; padding: 4px 10px 0; }
+  .trader-card .chart-mini svg { width: 100%; height: 100%; }
+  .trader-card .foot { padding: 12px 16px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .trader-card .foot .copiers { font-size: 11px; color: var(--text-dim); }
+  .trader-card .copy-btn { padding: 8px 18px; border-radius: 8px; background: var(--grad-logo); color: white; font-weight: 700; font-size: 12px; letter-spacing: 0.5px; box-shadow: 0 3px 14px rgba(37, 99, 235, 0.35); }
+
+  .pagination { display: flex; gap: 4px; justify-content: center; margin-top: 24px; }
+  .pagination button { width: 32px; height: 32px; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); font-weight: 600; font-size: 12px; }
+  .pagination button.active { background: var(--grad-logo); color: white; border-color: transparent; }
+  .pagination button:hover:not(.active) { color: var(--sky); border-color: var(--border-hi); }
+</style>
+</head>
+<body>
+
+<script src="logo.js"></script>
+<script src="shared.js"></script>
+<script>initPage({ active: 'copy' });</script>
+
+<main class="page">
+  <section class="hero-banner">
+    <div style="position: relative; z-index: 1;">
+      <h1>Copy the <span class="grad">top traders</span>, automatically.</h1>
+      <p>Follow verified MX1 pros and mirror their trades in real-time. Allocate capital, set a risk cap, and let their strategy run. Stop anytime — you keep full custody of funds.</p>
+      <div style="margin-top: 20px; display: flex; gap: 10px;">
+        <button class="btn-primary" onclick="scrollToGrid()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m5 12 7-7 7 7M12 5v14"/></svg>
+          Browse Traders
+        </button>
+        <button class="btn-ghost" onclick="toast('Become-a-trader application opened (demo)', 'info')">Become a Trader</button>
+      </div>
+    </div>
+    <div class="hero-stats-grid">
+      <div class="hero-stat-box"><div class="v">24,812</div><div class="l">Active Traders</div></div>
+      <div class="hero-stat-box"><div class="v">$412M</div><div class="l">Assets Copied</div></div>
+      <div class="hero-stat-box"><div class="v">+38.2%</div><div class="l">Avg. Top-50 ROI</div></div>
+      <div class="hero-stat-box"><div class="v">184k</div><div class="l">Copiers Active</div></div>
+    </div>
+  </section>
+
+  <div class="filter-bar" id="filterBar">
+    <div class="tabs" style="max-width: 480px;">
+      <button class="active" data-sort="roi">ROI 30D</button>
+      <button data-sort="win">Win Rate</button>
+      <button data-sort="copiers">Most Copied</button>
+      <button data-sort="pnl">Total PnL</button>
+    </div>
+    <select id="riskFilter">
+      <option value="all">All Risk Levels</option>
+      <option value="low">Low Risk</option>
+      <option value="medium">Medium Risk</option>
+      <option value="high">High Risk</option>
+    </select>
+    <select id="marketFilter">
+      <option value="all">All Markets</option>
+      <option value="spot">Spot</option>
+      <option value="perp">Perpetuals</option>
+    </select>
+    <div style="margin-left: auto; color: var(--text-faint); font-size: 12px;">
+      <span id="countLabel">24 traders</span>
+    </div>
+  </div>
+
+  <div class="traders-grid" id="tradersGrid"></div>
+
+  <div class="pagination">
+    <button>‹</button>
+    <button class="active">1</button>
+    <button>2</button>
+    <button>3</button>
+    <button>4</button>
+    <button>5</button>
+    <button>›</button>
+  </div>
+</main>
+
+<script>
+  // ---------- Trader data ----------
+  const GRADIENTS = [
+    'linear-gradient(135deg, #1e40af, #10b981)',
+    'linear-gradient(135deg, #2563eb, #14b8a6)',
+    'linear-gradient(135deg, #7c3aed, #3b82f6)',
+    'linear-gradient(135deg, #0891b2, #10b981)',
+    'linear-gradient(135deg, #059669, #38bdf8)',
+    'linear-gradient(135deg, #db2777, #6366f1)',
+    'linear-gradient(135deg, #f59e0b, #ef4444)',
+    'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+  ];
+
+  const TRADER_NAMES = [
+    ['Alex Kozlov', 'kozlovtrades', true, 'medium', 'perp'],
+    ['Mei Lin', 'meishigains', true, 'low', 'spot'],
+    ['Diego Santos', 'diegoFX', true, 'high', 'perp'],
+    ['Priya Rao', 'priyaHODL', true, 'low', 'spot'],
+    ['Jasper Noble', 'jasperJupiter', false, 'medium', 'perp'],
+    ['Aiko Tanaka', 'aikosamurai', true, 'high', 'perp'],
+    ['Marcus Webb', 'webbwealth', false, 'low', 'spot'],
+    ['Zahra Ahmed', 'zahracapital', true, 'medium', 'spot'],
+    ['Tomás Ribeiro', 'tomriver', true, 'high', 'perp'],
+    ['Yuki Sato', 'yukiquant', true, 'medium', 'perp'],
+    ['Elena Volkov', 'elenawaves', false, 'low', 'spot'],
+    ['Rashid Khan', 'rashidalpha', true, 'high', 'perp'],
+    ['Sofia Moretti', 'sofitrader', true, 'medium', 'spot'],
+    ['Owen Carter', 'owencapital', false, 'low', 'spot'],
+    ['Lina Park', 'linalunar', true, 'high', 'perp'],
+    ['Bastian Müller', 'bastianbit', true, 'medium', 'perp'],
+    ['Noor Hassan', 'noorbtc', false, 'low', 'spot'],
+    ['Felix Andersen', 'felixFX', true, 'high', 'perp'],
+    ['Camila Reyes', 'camilacrypto', true, 'medium', 'spot'],
+    ['Arjun Mehta', 'arjunapex', true, 'high', 'perp'],
+    ['Hiro Nakamura', 'hirowhale', true, 'medium', 'perp'],
+    ['Ines Oliveira', 'inessignals', false, 'low', 'spot'],
+    ['Kai Schmidt', 'kaikracken', true, 'medium', 'spot'],
+    ['Layla Jabari', 'laylalion', true, 'high', 'perp'],
+  ];
+
+  const TRADERS = TRADER_NAMES.map(([name, handle, verified, risk, market], i) => {
+    const roi = risk === 'high' ? 30 + Math.random() * 180 : risk === 'medium' ? 15 + Math.random() * 60 : 5 + Math.random() * 25;
+    const winRate = risk === 'low' ? 62 + Math.random() * 20 : risk === 'medium' ? 52 + Math.random() * 18 : 44 + Math.random() * 22;
+    const aum = Math.floor(100000 + Math.random() * 4000000);
+    const copiers = Math.floor(80 + Math.random() * 4000);
+    const pnl = Math.floor(aum * (roi / 100) * 0.3);
+    const trades = Math.floor(120 + Math.random() * 900);
+    const drawdown = (Math.random() * 20 + 5).toFixed(1);
+    return {
+      id: i,
+      name, handle, verified, risk, market,
+      rank: i + 1,
+      avatar: name.split(' ').map(x => x[0]).join(''),
+      gradient: GRADIENTS[i % GRADIENTS.length],
+      roi: Number(roi.toFixed(1)),
+      winRate: Number(winRate.toFixed(1)),
+      aum,
+      copiers,
+      pnl,
+      trades,
+      drawdown: Number(drawdown),
+      // sparkline path
+      spark: generateSpark(i, roi),
+    };
+  });
+
+  function generateSpark(seed, trend) {
+    let s = seed * 17 + 3;
+    const rand = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    const N = 30;
+    const points = [];
+    let y = 50;
+    for (let i = 0; i < N; i++) {
+      y += (rand() - 0.5) * 10 + (trend / 30);
+      y = Math.max(10, Math.min(90, y));
+      points.push([i * (100 / (N - 1)), 100 - y]);
+    }
+    return points;
+  }
+
+  // ---------- Render ----------
+  let sortBy = 'roi';
+  let riskFilter = 'all';
+  let marketFilter = 'all';
+
+  function render() {
+    let list = [...TRADERS];
+    if (riskFilter !== 'all') list = list.filter(t => t.risk === riskFilter);
+    if (marketFilter !== 'all') list = list.filter(t => t.market === marketFilter);
+    list.sort((a, b) => {
+      if (sortBy === 'roi') return b.roi - a.roi;
+      if (sortBy === 'win') return b.winRate - a.winRate;
+      if (sortBy === 'copiers') return b.copiers - a.copiers;
+      if (sortBy === 'pnl') return b.pnl - a.pnl;
+    });
+    list.forEach((t, i) => t.rank = i + 1);
+
+    document.getElementById('countLabel').textContent = `${list.length} traders`;
+
+    document.getElementById('tradersGrid').innerHTML = list.map(t => {
+      const sparkPts = t.spark.map(p => p.join(',')).join(' ');
+      const sparkArea = `0,50 ${sparkPts} 100,50`;
+      const sparkColor = t.roi >= 0 ? '#34d399' : '#f87171';
+      const riskChip = t.risk === 'high' ? '<span class="chip red">HIGH RISK</span>' : t.risk === 'medium' ? '<span class="chip amber">MED RISK</span>' : '<span class="chip green">LOW RISK</span>';
+      const medal = t.rank <= 3 ? (t.rank === 1 ? '🥇 #1' : t.rank === 2 ? '🥈 #2' : '🥉 #3') : `#${t.rank}`;
+      return `
+        <div class="trader-card" onclick="openTrader(${t.id})">
+          <div class="banner" style="background: ${t.gradient};">
+            <div class="rank">${medal}</div>
+          </div>
+          <div class="avatar" style="background: ${t.gradient};">${t.avatar}</div>
+          <div class="body">
+            <div class="name">${t.name}${t.verified ? ' <svg class="verified" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 9.5 4.5 6 4l-1 3.5-3 1.5 1.5 3.5L2 16l3 1.5L6 21l3.5-.5L12 23l2.5-2.5L18 21l1-3.5 3-1.5-1.5-3.5L22 9l-3-1.5L18 4l-3.5.5L12 2zm-1 13-4-4 1.4-1.4L11 12.2l5.6-5.6L18 8l-7 7z"/></svg>' : ''}</div>
+            <div class="handle">@${t.handle} · ${t.trades} trades · Max DD ${t.drawdown}%</div>
+          </div>
+          <div class="chart-mini">
+            <svg viewBox="0 0 100 50" preserveAspectRatio="none">
+              <polygon points="${sparkArea}" fill="${sparkColor}" opacity="0.15"/>
+              <polyline points="${sparkPts}" fill="none" stroke="${sparkColor}" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="v ${t.roi >= 0 ? 'up' : 'down'}">${t.roi >= 0 ? '+' : ''}${t.roi}%</div><div class="l">ROI 30D</div></div>
+            <div class="stat"><div class="v">${t.winRate}%</div><div class="l">Win Rate</div></div>
+            <div class="stat"><div class="v">${fmtVol(t.aum).replace('B','B').replace('M','M')}</div><div class="l">AUM</div></div>
+          </div>
+          <div class="foot">
+            <div class="copiers">
+              ${riskChip}
+              <span style="margin-left: 6px;">${t.copiers.toLocaleString()} copiers</span>
+            </div>
+            <button class="copy-btn" onclick="event.stopPropagation(); openCopyModal(${t.id})">Copy</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  document.querySelectorAll('#filterBar .tabs button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#filterBar .tabs button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      sortBy = b.dataset.sort;
+      render();
+    });
+  });
+  document.getElementById('riskFilter').addEventListener('change', e => { riskFilter = e.target.value; render(); });
+  document.getElementById('marketFilter').addEventListener('change', e => { marketFilter = e.target.value; render(); });
+
+  // Profile / copy modal
+  window.openTrader = function(id) {
+    const t = TRADERS.find(x => x.id === id);
+    const body = `
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;">
+        <div style="width:64px;height:64px;border-radius:50%;background:${t.gradient};display:flex;align-items:center;justify-content:center;font-weight:800;color:white;font-family:var(--font-display);font-size:20px;">${t.avatar}</div>
+        <div>
+          <div style="font-size:18px;font-weight:700;">${t.name}</div>
+          <div style="color:var(--text-faint);font-family:var(--font-mono);font-size:12px;">@${t.handle}</div>
+          <div style="margin-top:6px;">${t.risk === 'high' ? '<span class="chip red">HIGH RISK</span>' : t.risk === 'medium' ? '<span class="chip amber">MEDIUM</span>' : '<span class="chip green">LOW RISK</span>'}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+        <div style="padding:12px;background:var(--bg-2);border-radius:8px;"><div style="color:var(--text-faint);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;">ROI 30D</div><div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:var(--green-hi);margin-top:4px;">+${t.roi}%</div></div>
+        <div style="padding:12px;background:var(--bg-2);border-radius:8px;"><div style="color:var(--text-faint);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;">Win Rate</div><div style="font-family:var(--font-mono);font-size:18px;font-weight:700;margin-top:4px;">${t.winRate}%</div></div>
+        <div style="padding:12px;background:var(--bg-2);border-radius:8px;"><div style="color:var(--text-faint);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;">AUM</div><div style="font-family:var(--font-mono);font-size:18px;font-weight:700;margin-top:4px;">${fmtUSD(t.aum, 0)}</div></div>
+        <div style="padding:12px;background:var(--bg-2);border-radius:8px;"><div style="color:var(--text-faint);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;">Copiers</div><div style="font-family:var(--font-mono);font-size:18px;font-weight:700;margin-top:4px;">${t.copiers.toLocaleString()}</div></div>
+      </div>
+      <div style="color:var(--text-dim);font-size:13px;line-height:1.5;">Strategy: ${t.risk === 'high' ? 'Aggressive leveraged perpetual scalping with automated stop-losses.' : t.risk === 'medium' ? 'Balanced swing trading across BTC, ETH and mid-cap altcoins.' : 'Conservative spot DCA with rebalancing on major moves.'}</div>
+    `;
+    modal({
+      title: `Trader Profile`,
+      body,
+      width: 500,
+      actions: [
+        { label: 'Close', class: 'btn-ghost' },
+        { label: 'Copy This Trader', class: 'btn-primary', onClick: close => { close(); openCopyModal(id); } }
+      ]
+    });
+  };
+
+  window.openCopyModal = function(id) {
+    if (!MX1.session) {
+      toast('Please sign in to copy a trader.', 'error');
+      setTimeout(() => location.href = 'login.html?next=copy-trading.html', 800);
+      return;
+    }
+    const t = TRADERS.find(x => x.id === id);
+    const body = `
+      <div style="margin-bottom:16px;display:flex;gap:12px;align-items:center;padding:12px;background:var(--bg-2);border-radius:10px;border:1px solid var(--border);">
+        <div style="width:44px;height:44px;border-radius:50%;background:${t.gradient};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;">${t.avatar}</div>
+        <div>
+          <div style="font-weight:600;">${t.name}</div>
+          <div style="font-size:11px;color:var(--text-faint);">@${t.handle} · ${t.roi >= 0 ? '+' : ''}${t.roi}% ROI</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="field">
+          <label>Allocation (USDT)</label>
+          <input type="number" id="copyAmt" value="500" min="50" />
+          <div style="display:flex;gap:6px;margin-top:6px;">
+            ${[100, 500, 1000, 5000].map(v => `<button class="btn-ghost" style="flex:1;padding:6px;font-size:11px;" onclick="document.getElementById('copyAmt').value=${v}">$${v}</button>`).join('')}
+          </div>
+        </div>
+        <div class="field">
+          <label>Max Loss Before Auto-Stop (%)</label>
+          <input type="number" id="copyStop" value="20" min="5" max="100" />
+        </div>
+        <div class="field">
+          <label>Copy Mode</label>
+          <select>
+            <option>Proportional (match %)</option>
+            <option>Fixed amount per trade</option>
+          </select>
+        </div>
+        <label style="display:flex;gap:8px;font-size:12px;color:var(--text-dim);"><input type="checkbox" checked style="accent-color:var(--sky);"/> I understand copy trading carries risk and past performance doesn't guarantee future results.</label>
+      </div>
+    `;
+    modal({
+      title: 'Start Copying',
+      body,
+      width: 480,
+      actions: [
+        { label: 'Cancel', class: 'btn-ghost' },
+        { label: 'Start Copy Trading', class: 'btn-primary', onClick: close => {
+          const amt = document.getElementById('copyAmt').value;
+          close();
+          toast(`Copying ${t.name} with $${amt} USDT. First trades will appear in Portfolio.`, 'success', 4000);
+          // Save to followed list
+          const followed = JSON.parse(localStorage.getItem('mx1_followed') || '[]');
+          followed.push({ traderId: id, name: t.name, amount: parseFloat(amt), startedAt: Date.now() });
+          localStorage.setItem('mx1_followed', JSON.stringify(followed));
+        }}
+      ]
+    });
+  };
+
+  function scrollToGrid() {
+    document.getElementById('tradersGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  render();
+</script>
+</body>
+</html>

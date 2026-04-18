@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Trade · MX1 Exchange</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr 340px;
+    gap: 8px; padding: 8px;
+    height: calc(100vh - 130px);
+  }
+  .panel { display: flex; flex-direction: column; }
+
+  /* Left */
+  .left-col { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  .pair-search { padding: 10px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; background: var(--bg-1); }
+  .pair-search input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-size: 12px; }
+  .pair-tabs { display: flex; gap: 2px; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .pair-tabs button { padding: 5px 10px; font-size: 11px; font-weight: 600; color: var(--text-faint); border-radius: 6px; letter-spacing: 0.5px; }
+  .pair-tabs button.active { color: var(--sky); background: rgba(56, 189, 248, 0.1); }
+  .pair-list { overflow-y: auto; flex: 1; min-height: 180px; }
+  .pair-row { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; padding: 8px 12px; font-size: 12px; border-left: 2px solid transparent; cursor: pointer; transition: background 0.15s; align-items: center; }
+  .pair-row:hover { background: rgba(56, 189, 248, 0.06); }
+  .pair-row.selected { background: linear-gradient(90deg, rgba(37, 99, 235, 0.14), transparent); border-left-color: var(--sky); }
+  .pair-row .pair-name { font-weight: 600; }
+  .pair-row .pair-name small { color: var(--text-faint); font-weight: 400; margin-left: 2px; }
+  .pair-row .pair-price, .pair-row .pair-chg { font-family: var(--font-mono); }
+  .pair-row .pair-chg { font-size: 11px; text-align: right; min-width: 52px; }
+
+  /* Order book */
+  .orderbook { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .ob-head { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 6px 12px; font-size: 10px; letter-spacing: 0.5px; color: var(--text-faint); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  .ob-head > :nth-child(2), .ob-head > :nth-child(3) { text-align: right; }
+  .ob-side { flex: 1; overflow: hidden; font-family: var(--font-mono); font-size: 11.5px; }
+  .ob-row { position: relative; display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 3px 12px; cursor: pointer; }
+  .ob-row > :nth-child(2), .ob-row > :nth-child(3) { text-align: right; color: var(--text-dim); }
+  .ob-row:hover { background: rgba(56, 189, 248, 0.06); }
+  .ob-bar { position: absolute; top: 0; bottom: 0; right: 0; opacity: 0.14; }
+  .ob-bar.ask { background: linear-gradient(270deg, var(--red) 0%, transparent 100%); }
+  .ob-bar.bid { background: linear-gradient(270deg, var(--green) 0%, transparent 100%); }
+  .ob-row .px { position: relative; z-index: 1; font-weight: 600; }
+  .ob-row.ask .px { color: var(--red-hi); }
+  .ob-row.bid .px { color: var(--green-hi); }
+  .ob-spread { padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--bg-1); }
+  .ob-spread .last { font-family: var(--font-mono); font-weight: 700; font-size: 16px; }
+  .ob-spread .last.up { color: var(--green-hi); }
+  .ob-spread .last.down { color: var(--red-hi); }
+  .ob-spread .last .arrow { font-size: 11px; margin-right: 4px; }
+
+  /* Center */
+  .center-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .pair-header { flex: 0 0 auto; display: flex; align-items: center; gap: 24px; padding: 12px 18px; flex-wrap: wrap; }
+  .pair-title { display: flex; align-items: center; gap: 12px; }
+  .pair-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; font-size: 14px; }
+  .pair-title h1 { font-family: var(--font-display); font-size: 17px; font-weight: 800; letter-spacing: 1px; }
+  .pair-price-main { font-family: var(--font-mono); font-size: 22px; font-weight: 700; }
+  .pair-stats { display: flex; gap: 22px; margin-left: auto; flex-wrap: wrap; }
+  .pair-stat { display: flex; flex-direction: column; gap: 2px; }
+  .pair-stat .label { font-size: 10px; color: var(--text-faint); letter-spacing: 0.6px; text-transform: uppercase; }
+  .pair-stat .value { font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+
+  .chart-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .chart-toolbar { display: flex; align-items: center; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 12px; flex-wrap: wrap; }
+  .tf-btn { padding: 5px 10px; border-radius: 6px; font-weight: 600; color: var(--text-dim); font-family: var(--font-mono); font-size: 11px; }
+  .tf-btn:hover { color: var(--text); background: rgba(56, 189, 248, 0.06); }
+  .tf-btn.active { color: var(--sky); background: rgba(56, 189, 248, 0.14); }
+  .chart-toolbar .divider { width: 1px; height: 16px; background: var(--border); margin: 0 6px; }
+  .chart-toolbar .spacer { flex: 1; }
+
+  .chart-body { flex: 1; position: relative; min-height: 0; }
+  .chart-body svg { width: 100%; height: 100%; display: block; }
+  .chart-info { position: absolute; top: 12px; left: 14px; display: flex; align-items: center; gap: 18px; font-family: var(--font-mono); font-size: 11px; pointer-events: none; flex-wrap: wrap; }
+  .chart-info .pair { color: var(--text); font-weight: 600; }
+  .chart-info .ohlc { color: var(--text-dim); }
+  .chart-info .ohlc span { margin-right: 10px; }
+  .chart-info .ohlc .o-lbl { color: var(--text-faint); margin-right: 2px; }
+
+  /* Right trade panel */
+  .trade-panel { display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow-y: auto; }
+  .ls-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 8px; background: var(--bg-1); border-bottom: 1px solid var(--border); }
+  .ls-toggle button { padding: 10px; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; border-radius: 8px; transition: all 0.2s; color: var(--text-dim); background: var(--bg-2); }
+  .ls-toggle .long.active { background: linear-gradient(135deg, var(--green), var(--emerald)); color: white; box-shadow: var(--glow-green); }
+  .ls-toggle .short.active { background: linear-gradient(135deg, var(--red), #dc2626); color: white; box-shadow: 0 0 22px rgba(239, 68, 68, 0.45); }
+
+  .order-types { display: flex; gap: 14px; padding: 10px 12px 0; font-size: 12px; }
+  .order-types button { padding: 6px 0; color: var(--text-faint); font-weight: 600; border-bottom: 2px solid transparent; }
+  .order-types button.active { color: var(--text); border-bottom-color: var(--sky); }
+
+  .form-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .input-row { display: flex; align-items: center; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; padding: 0 10px; transition: border-color 0.15s; }
+  .input-row:focus-within { border-color: var(--border-hi); }
+  .input-row .lbl { font-size: 11px; color: var(--text-faint); min-width: 54px; font-weight: 600; }
+  .input-row input { flex: 1; padding: 10px 4px; background: none; border: none; outline: none; color: var(--text); font-family: var(--font-mono); font-size: 13px; text-align: right; }
+  .input-row .suffix { font-size: 11px; color: var(--text-dim); font-weight: 600; padding-left: 6px; border-left: 1px solid var(--border); margin-left: 6px; }
+
+  .pct-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .pct-row button { padding: 6px; font-size: 11px; font-weight: 600; color: var(--text-dim); background: var(--bg-1); border: 1px solid var(--border); border-radius: 6px; }
+  .pct-row button:hover { color: var(--sky); border-color: var(--border-hi); }
+  .pct-row button.active { color: white; background: var(--grad-logo); border-color: transparent; }
+
+  .leverage-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; }
+  .leverage-row .lev { font-family: var(--font-mono); font-weight: 700; color: var(--sky); font-size: 13px; }
+  .leverage-row .lev-slider { flex: 1; height: 3px; background: var(--bg-2); border-radius: 2px; position: relative; cursor: pointer; }
+  .leverage-row .lev-slider::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; background: var(--grad-logo); border-radius: 2px; transition: width 0.2s; }
+  .leverage-row .lev-mode { font-size: 10px; color: var(--text-faint); padding: 3px 6px; background: var(--bg-2); border-radius: 4px; cursor: pointer; }
+
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-size: 11px; }
+  .info-grid .k { color: var(--text-faint); }
+  .info-grid .v { color: var(--text-dim); font-family: var(--font-mono); text-align: right; }
+
+  .submit-btn { padding: 13px; border-radius: 10px; font-weight: 800; font-size: 14px; letter-spacing: 0.8px; background: linear-gradient(135deg, var(--green), var(--emerald)); color: white; text-transform: uppercase; box-shadow: 0 4px 24px rgba(16, 185, 129, 0.4); transition: all 0.2s; }
+  .submit-btn:hover { transform: translateY(-1px); }
+
+  /* Open positions table */
+  .positions-tabs { display: flex; gap: 20px; padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .positions-tabs button { padding: 4px 0; color: var(--text-faint); font-weight: 600; border-bottom: 2px solid transparent; }
+  .positions-tabs button.active { color: var(--text); border-bottom-color: var(--sky); }
+  .positions-tabs button .cnt { background: var(--bg-2); color: var(--sky); padding: 1px 6px; border-radius: 999px; font-size: 10px; margin-left: 4px; font-family: var(--font-mono); }
+
+  .bottom-area { border-top: 1px solid var(--border); margin-top: 8px; }
+
+  @media (max-width: 1200px) { .layout { grid-template-columns: 260px 1fr 300px; } }
+  @media (max-width: 960px) { .layout { grid-template-columns: 1fr; height: auto; } .chart-body { height: 420px; } }
+</style>
+</head>
+<body>
+
+<script src="logo.js"></script>
+<script src="shared.js"></script>
+<script>initPage({ active: 'trade' });</script>
+
+<!-- TICKER TAPE -->
+<div class="ticker-tape" id="tickerTape"></div>
+
+<!-- MAIN LAYOUT -->
+<div class="layout">
+
+  <!-- LEFT -->
+  <div class="left-col">
+    <div class="panel" style="flex: 0 0 auto;">
+      <div class="pair-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color: var(--text-faint);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="pairSearchInput" placeholder="Search markets..." />
+      </div>
+      <div class="pair-tabs">
+        <button class="active" data-filter="all">ALL</button>
+        <button data-filter="fav">FAV</button>
+        <button data-filter="gainers">GAINERS</button>
+        <button data-filter="losers">LOSERS</button>
+      </div>
+      <div class="pair-list" id="pairList" style="max-height: 280px;"></div>
+    </div>
+
+    <div class="panel orderbook">
+      <div class="panel-header">
+        <span>Order Book</span>
+        <span style="font-family: var(--font-mono); color: var(--text-dim); text-transform: none; letter-spacing: 0;">0.01</span>
+      </div>
+      <div class="ob-head"><span>Price</span><span>Amount</span><span>Total</span></div>
+      <div class="ob-side" id="asks"></div>
+      <div class="ob-spread">
+        <div><span class="last up" id="obLast"><span class="arrow">▲</span>88,508.76</span></div>
+        <span class="mono" style="font-size: 11px; color: var(--text-faint);">Spread: 0.010%</span>
+      </div>
+      <div class="ob-side" id="bids"></div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center-col">
+    <div class="panel pair-header">
+      <div class="pair-title">
+        <div class="pair-icon" id="pairIcon">₿</div>
+        <h1 id="pairTitle">BTC/USDT</h1>
+      </div>
+      <div class="pair-price-main" id="mainPrice">88,508.76</div>
+      <div class="pair-stats" id="pairStats"></div>
+    </div>
+
+    <div class="panel chart-panel">
+      <div class="chart-toolbar">
+        <button class="tf-btn">1m</button>
+        <button class="tf-btn">5m</button>
+        <button class="tf-btn active">15m</button>
+        <button class="tf-btn">1h</button>
+        <button class="tf-btn">4h</button>
+        <button class="tf-btn">1D</button>
+        <button class="tf-btn">1W</button>
+        <span class="divider"></span>
+        <button class="tf-btn">Indicators</button>
+        <button class="tf-btn">Candle</button>
+        <span class="spacer"></span>
+        <button class="tf-btn">⚙</button>
+      </div>
+      <div class="chart-body">
+        <div class="chart-info">
+          <span class="pair" id="chartPair">BTC/USDT · 15 · MX1</span>
+          <span class="ohlc" id="chartOHLC"></span>
+        </div>
+        <svg id="chart" viewBox="0 0 1000 460" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+
+    <div class="panel" style="flex: 0 0 auto;">
+      <div class="positions-tabs">
+        <button class="active" data-tab="positions">Positions <span class="cnt" id="posCnt">0</span></button>
+        <button data-tab="orders">Open Orders <span class="cnt" id="ordCnt">0</span></button>
+        <button data-tab="history">History</button>
+      </div>
+      <div id="positionsContent" style="padding: 16px; min-height: 80px;">
+        <div style="text-align: center; color: var(--text-faint); font-size: 12px; padding: 20px 0;">No open positions. <a href="#" onclick="document.querySelector('.submit-btn').click(); return false;" style="color: var(--sky);">Place your first trade →</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="panel trade-panel">
+    <div class="ls-toggle">
+      <button class="long active" id="longBtn">LONG / BUY</button>
+      <button class="short" id="shortBtn">SHORT / SELL</button>
+    </div>
+    <div class="order-types">
+      <button class="active" data-ot="limit">Limit</button>
+      <button data-ot="market">Market</button>
+      <button data-ot="stop">Stop</button>
+      <button data-ot="oco">OCO</button>
+    </div>
+    <div class="form-body">
+      <div class="leverage-row">
+        <span style="font-size: 11px; color: var(--text-faint); font-weight: 600;">Cross</span>
+        <span class="lev" id="levVal">20x</span>
+        <div class="lev-slider" id="levSlider"><div></div></div>
+        <span class="lev-mode" onclick="toast('Margin mode toggled to Isolated', 'info')">Isolated</span>
+      </div>
+      <div class="input-row">
+        <span class="lbl">Price</span>
+        <input type="text" id="priceInput" value="88,508.76" />
+        <span class="suffix" id="priceSuffix">USDT</span>
+      </div>
+      <div class="input-row">
+        <span class="lbl">Amount</span>
+        <input type="text" id="amountInput" value="0.0250" />
+        <span class="suffix" id="amountSuffix">BTC</span>
+      </div>
+      <div class="pct-row">
+        <button data-pct="25">25%</button>
+        <button data-pct="50">50%</button>
+        <button data-pct="75">75%</button>
+        <button data-pct="100">Max</button>
+      </div>
+      <div class="input-row">
+        <span class="lbl">Total</span>
+        <input type="text" id="totalInput" value="2,212.72" readonly />
+        <span class="suffix">USDT</span>
+      </div>
+      <div class="info-grid">
+        <span class="k">Available</span><span class="v" id="availVal">30,452.00 USDT</span>
+        <span class="k">Max Size</span><span class="v" id="maxSize">6.877 BTC</span>
+        <span class="k">Liq. Price</span><span class="v" id="liqPrice">84,220.15</span>
+        <span class="k">Taker Fee</span><span class="v">0.06%</span>
+      </div>
+      <button class="submit-btn" id="submitBtn">Open Long · BTC</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ---------- State ----------
+  const favs = JSON.parse(localStorage.getItem('mx1_favs') || '["BTC","ETH","SOL"]');
+  let selectedPair = 'BTC';
+  let side = 'long';
+  let leverage = 20;
+  let positions = JSON.parse(localStorage.getItem('mx1_positions') || '[]');
+  let openOrders = JSON.parse(localStorage.getItem('mx1_orders') || '[]');
+  let history = JSON.parse(localStorage.getItem('mx1_history') || '[]');
+
+  function savePositions() { localStorage.setItem('mx1_positions', JSON.stringify(positions)); }
+  function saveOrders() { localStorage.setItem('mx1_orders', JSON.stringify(openOrders)); }
+  function saveHistory() { localStorage.setItem('mx1_history', JSON.stringify(history)); }
+
+  // URL param support
+  const urlPair = new URLSearchParams(location.search).get('pair');
+  if (urlPair && MARKETS.find(m => m.s === urlPair)) selectedPair = urlPair;
+
+  // ---------- Ticker tape ----------
+  const tape = document.getElementById('tickerTape');
+  tape.innerHTML = MARKETS.map(m => `
+    <div class="ticker-item" onclick="selectPair('${m.s}')">
+      <span class="sym">${m.s}/${m.q}</span>
+      <span class="price">${fmtPrice(m.p)}</span>
+      <span class="${m.c >= 0 ? 'up' : 'down'}">${m.c >= 0 ? '+' : ''}${m.c.toFixed(2)}%</span>
+    </div>
+  `).join('');
+
+  // ---------- Pair list ----------
+  let pairFilter = 'all';
+  let pairSearch = '';
+  function renderPairList() {
+    let list = MARKETS;
+    if (pairFilter === 'fav') list = list.filter(m => favs.includes(m.s));
+    if (pairFilter === 'gainers') list = [...list].filter(m => m.c > 0).sort((a, b) => b.c - a.c);
+    if (pairFilter === 'losers') list = [...list].filter(m => m.c < 0).sort((a, b) => a.c - b.c);
+    if (pairSearch) list = list.filter(m => (m.s + m.name).toLowerCase().includes(pairSearch.toLowerCase()));
+    const el = document.getElementById('pairList');
+    el.innerHTML = list.map(m => `
+      <div class="pair-row ${m.s === selectedPair ? 'selected' : ''}" onclick="selectPair('${m.s}')">
+        <span class="pair-name">${m.s}<small>/${m.q}</small></span>
+        <span class="pair-price">${fmtPrice(m.p)}</span>
+        <span class="pair-chg ${m.c >= 0 ? 'up' : 'down'}">${m.c >= 0 ? '+' : ''}${m.c.toFixed(2)}%</span>
+      </div>
+    `).join('') || '<div style="padding:20px;text-align:center;color:var(--text-faint);font-size:12px;">No markets match.</div>';
+  }
+  document.querySelectorAll('.pair-tabs button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.pair-tabs button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      pairFilter = b.dataset.filter;
+      renderPairList();
+    });
+  });
+  document.getElementById('pairSearchInput').addEventListener('input', e => {
+    pairSearch = e.target.value;
+    renderPairList();
+  });
+
+  // ---------- Select pair ----------
+  window.selectPair = function(sym) {
+    const m = MARKETS.find(x => x.s === sym);
+    if (!m) return;
+    selectedPair = sym;
+    document.getElementById('pairTitle').textContent = `${m.s}/${m.q}`;
+    document.getElementById('pairIcon').textContent = m.icon;
+    document.getElementById('pairIcon').style.background = `linear-gradient(135deg, ${m.color}, ${m.color}99)`;
+    document.getElementById('pairIcon').style.boxShadow = `0 0 18px ${m.color}55`;
+    document.getElementById('mainPrice').textContent = fmtPrice(m.p);
+    document.getElementById('mainPrice').style.color = m.c >= 0 ? 'var(--green-hi)' : 'var(--red-hi)';
+    document.getElementById('mainPrice').style.textShadow = m.c >= 0
+      ? '0 0 18px rgba(52, 211, 153, 0.3)' : '0 0 18px rgba(248, 113, 113, 0.3)';
+
+    const statsEl = document.getElementById('pairStats');
+    statsEl.innerHTML = `
+      <div class="pair-stat"><span class="label">24h Change</span><span class="value ${m.c >= 0 ? 'up' : 'down'}">${m.c >= 0 ? '+' : ''}${m.c.toFixed(2)}%</span></div>
+      <div class="pair-stat"><span class="label">Mark Price</span><span class="value">${fmtPrice(m.p + 3.64)}</span></div>
+      <div class="pair-stat"><span class="label">Index</span><span class="value">${fmtPrice(m.p - 4.54)}</span></div>
+      <div class="pair-stat"><span class="label">24h High</span><span class="value">${fmtPrice(m.hi)}</span></div>
+      <div class="pair-stat"><span class="label">24h Low</span><span class="value">${fmtPrice(m.lo)}</span></div>
+      <div class="pair-stat"><span class="label">24h Volume</span><span class="value">${fmtVol(m.vol)}</span></div>
+    `;
+
+    document.getElementById('chartPair').textContent = `${m.s}/${m.q} · 15 · MX1`;
+    document.getElementById('priceInput').value = fmtPrice(m.p);
+    document.getElementById('amountSuffix').textContent = m.s;
+    document.getElementById('maxSize').textContent = (30452 / m.p * leverage).toFixed(m.p < 10 ? 0 : 3) + ' ' + m.s;
+    updateTotal();
+    renderPairList();
+    renderChart(m);
+    renderOrderBook(m);
+    updateSubmitBtn();
+    history.replaceState(null, '', `?pair=${sym}`);
+  };
+
+  // ---------- Chart (candlestick SVG) ----------
+  function renderChart(market) {
+    const svg = document.getElementById('chart');
+    const W = 1000, H = 460;
+    const rightPad = 70, leftPad = 0, topPad = 40, botPad = 30;
+    const chartW = W - leftPad - rightPad;
+    const chartH = H - topPad - botPad;
+    const N = 70;
+
+    // Seeded random based on symbol so chart is stable per pair
+    let seed = 0; for (const c of market.s) seed += c.charCodeAt(0);
+    const rand = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+
+    let price = market.p * (1 + (market.c / 100) * -1.5);  // start a bit away
+    const candles = [];
+    const targetEnd = market.p;
+    for (let i = 0; i < N; i++) {
+      const vol = market.p * 0.005 + rand() * market.p * 0.004;
+      const trend = (targetEnd - price) * 0.03;
+      const drift = trend + (rand() - 0.5) * vol;
+      const o = price;
+      const c = o + drift;
+      const h = Math.max(o, c) + rand() * vol * 0.5;
+      const l = Math.min(o, c) - rand() * vol * 0.5;
+      candles.push({ o, h, l, c });
+      price = c;
+    }
+    // Force last candle to match
+    candles[N - 1].c = market.p;
+
+    const allVals = candles.flatMap(k => [k.h, k.l]);
+    const maxP = Math.max(...allVals) * 1.003;
+    const minP = Math.min(...allVals) * 0.997;
+    const scaleY = (p) => topPad + (1 - (p - minP) / (maxP - minP)) * chartH;
+    const candleW = chartW / N * 0.7;
+    const step = chartW / N;
+
+    let c = '';
+    // Grid
+    for (let i = 0; i <= 6; i++) {
+      const y = topPad + (chartH / 6) * i;
+      const priceLine = maxP - ((maxP - minP) / 6) * i;
+      c += `<line x1="${leftPad}" y1="${y}" x2="${W - rightPad}" y2="${y}" stroke="rgba(56,189,248,0.06)" stroke-width="1"/>`;
+      c += `<text x="${W - rightPad + 6}" y="${y + 3}" fill="#556280" font-size="10" font-family="JetBrains Mono">${fmtPrice(priceLine)}</text>`;
+    }
+    for (let i = 0; i <= 7; i++) {
+      const x = leftPad + (chartW / 7) * i;
+      c += `<line x1="${x}" y1="${topPad}" x2="${x}" y2="${H - botPad}" stroke="rgba(56,189,248,0.05)" stroke-width="1"/>`;
+      const hh = String((12 + i) % 24).padStart(2, '0');
+      c += `<text x="${x + 4}" y="${H - 10}" fill="#556280" font-size="10" font-family="JetBrains Mono">${hh}:00</text>`;
+    }
+
+    candles.forEach((k, i) => {
+      const x = leftPad + i * step + step / 2;
+      const isUp = k.c >= k.o;
+      const color = isUp ? '#34d399' : '#f87171';
+      const yO = scaleY(k.o), yC = scaleY(k.c);
+      const yH = scaleY(k.h), yL = scaleY(k.l);
+      const bodyY = Math.min(yO, yC);
+      const bodyH = Math.max(1.5, Math.abs(yC - yO));
+      c += `<line x1="${x}" y1="${yH}" x2="${x}" y2="${yL}" stroke="${color}" stroke-width="1"/>`;
+      c += `<rect x="${x - candleW/2}" y="${bodyY}" width="${candleW}" height="${bodyH}" fill="${color}"/>`;
+    });
+
+    const last = candles[N - 1];
+    const lastY = scaleY(last.c);
+    c += `<line x1="${leftPad}" y1="${lastY}" x2="${W - rightPad}" y2="${lastY}" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>`;
+    c += `<rect x="${W - rightPad}" y="${lastY - 10}" width="${rightPad - 4}" height="20" fill="#2563eb" rx="3"/>`;
+    c += `<text x="${W - rightPad + 6}" y="${lastY + 4}" fill="white" font-size="11" font-weight="700" font-family="JetBrains Mono">${fmtPrice(last.c)}</text>`;
+
+    // Volume bars
+    candles.forEach((k, i) => {
+      const x = leftPad + i * step + step / 2;
+      const isUp = k.c >= k.o;
+      const h = Math.abs(k.h - k.l) / (maxP - minP) * 150 + 4;
+      const y = H - botPad - h;
+      c += `<rect x="${x - candleW/2}" y="${y}" width="${candleW}" height="${h}" fill="${isUp ? '#34d399' : '#f87171'}" opacity="0.16"/>`;
+    });
+
+    svg.innerHTML = c;
+
+    // OHLC bar
+    document.getElementById('chartOHLC').innerHTML = `
+      <span><span class="o-lbl">O</span>${fmtPrice(last.o)}</span>
+      <span><span class="o-lbl">H</span>${fmtPrice(Math.max(...candles.map(k=>k.h)))}</span>
+      <span><span class="o-lbl">L</span>${fmtPrice(Math.min(...candles.map(k=>k.l)))}</span>
+      <span class="${last.c >= last.o ? 'up' : 'down'}"><span class="o-lbl">C</span>${fmtPrice(last.c)}</span>
+    `;
+  }
+
+  // ---------- Order book ----------
+  function renderOrderBook(market) {
+    const base = market.p;
+    const step = base * 0.00005; // 0.005% steps
+    let askH = '', bidH = '';
+    for (let i = 11; i >= 0; i--) {
+      const px = base + (i + 1) * step * 4 + Math.random() * step;
+      const amt = 0.1 + Math.random() * 1.5;
+      const total = px * amt;
+      const bar = (amt / 1.6) * 100;
+      askH += `
+        <div class="ob-row ask">
+          <div class="ob-bar ask" style="width: ${bar.toFixed(1)}%;"></div>
+          <span class="px">${fmtPrice(px)}</span>
+          <span>${amt.toFixed(4)}</span>
+          <span>${total.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+        </div>`;
+    }
+    for (let i = 0; i < 12; i++) {
+      const px = base - (i + 1) * step * 4 - Math.random() * step;
+      const amt = 0.1 + Math.random() * 1.5;
+      const total = px * amt;
+      const bar = (amt / 1.6) * 100;
+      bidH += `
+        <div class="ob-row bid">
+          <div class="ob-bar bid" style="width: ${bar.toFixed(1)}%;"></div>
+          <span class="px">${fmtPrice(px)}</span>
+          <span>${amt.toFixed(4)}</span>
+          <span>${total.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+        </div>`;
+    }
+    document.getElementById('asks').innerHTML = askH;
+    document.getElementById('bids').innerHTML = bidH;
+    const lastEl = document.getElementById('obLast');
+    lastEl.className = 'last ' + (market.c >= 0 ? 'up' : 'down');
+    lastEl.innerHTML = `<span class="arrow">${market.c >= 0 ? '▲' : '▼'}</span>${fmtPrice(market.p)}`;
+  }
+
+  // ---------- Trade form ----------
+  const priceInput = document.getElementById('priceInput');
+  const amountInput = document.getElementById('amountInput');
+  const totalInput = document.getElementById('totalInput');
+  function parseNum(s) { return parseFloat(String(s).replace(/,/g, '')) || 0; }
+  function updateTotal() {
+    const p = parseNum(priceInput.value);
+    const a = parseNum(amountInput.value);
+    totalInput.value = (p * a).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+  priceInput.addEventListener('input', updateTotal);
+  amountInput.addEventListener('input', updateTotal);
+
+  document.querySelectorAll('.pct-row button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.pct-row button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      const pct = parseInt(b.dataset.pct);
+      const m = MARKETS.find(x => x.s === selectedPair);
+      const bal = MX1.session?.balance || 30452;
+      const maxAmt = (bal * leverage * (pct / 100)) / m.p;
+      amountInput.value = maxAmt.toFixed(m.p < 10 ? 0 : 4);
+      updateTotal();
+    });
+  });
+
+  // Long / short
+  const longBtn = document.getElementById('longBtn');
+  const shortBtn = document.getElementById('shortBtn');
+  const submitBtn = document.getElementById('submitBtn');
+  function updateSubmitBtn() {
+    const m = MARKETS.find(x => x.s === selectedPair);
+    if (side === 'long') {
+      submitBtn.textContent = `Open Long · ${m.s}`;
+      submitBtn.style.background = 'linear-gradient(135deg, var(--green), var(--emerald))';
+      submitBtn.style.boxShadow = '0 4px 24px rgba(16, 185, 129, 0.4)';
+    } else {
+      submitBtn.textContent = `Open Short · ${m.s}`;
+      submitBtn.style.background = 'linear-gradient(135deg, var(--red), #dc2626)';
+      submitBtn.style.boxShadow = '0 4px 24px rgba(239, 68, 68, 0.4)';
+    }
+  }
+  longBtn.addEventListener('click', () => { side = 'long'; longBtn.classList.add('active'); shortBtn.classList.remove('active'); updateSubmitBtn(); });
+  shortBtn.addEventListener('click', () => { side = 'short'; shortBtn.classList.add('active'); longBtn.classList.remove('active'); updateSubmitBtn(); });
+
+  // Order type tabs
+  document.querySelectorAll('.order-types button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.order-types button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+    });
+  });
+
+  // Leverage slider
+  const levSlider = document.getElementById('levSlider');
+  const levVal = document.getElementById('levVal');
+  function setLeverage(x, y) {
+    const rect = levSlider.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
+    leverage = Math.max(1, Math.round(pct * 125));
+    levVal.textContent = leverage + 'x';
+    levSlider.firstElementChild.style.width = (leverage / 125 * 100) + '%';
+  }
+  // Initial
+  levSlider.firstElementChild.style.width = (20 / 125 * 100) + '%';
+  let dragging = false;
+  levSlider.addEventListener('mousedown', e => { dragging = true; setLeverage(e.clientX); });
+  document.addEventListener('mousemove', e => { if (dragging) setLeverage(e.clientX); });
+  document.addEventListener('mouseup', () => { dragging = false; });
+
+  // Submit order
+  submitBtn.addEventListener('click', () => {
+    if (!MX1.session) {
+      toast('Please sign in to place a trade.', 'error');
+      setTimeout(() => location.href = 'login.html?next=index.html', 800);
+      return;
+    }
+    const m = MARKETS.find(x => x.s === selectedPair);
+    const px = parseNum(priceInput.value);
+    const amt = parseNum(amountInput.value);
+    if (!px || !amt) { toast('Enter a price and amount.', 'error'); return; }
+
+    const pos = {
+      id: 'p_' + Date.now(),
+      pair: `${m.s}/${m.q}`,
+      symbol: m.s,
+      side,
+      entryPrice: px,
+      amount: amt,
+      leverage,
+      timestamp: Date.now(),
+      pnl: 0,
+      liqPrice: side === 'long' ? px * (1 - 0.95 / leverage) : px * (1 + 0.95 / leverage),
+    };
+    positions.push(pos);
+    savePositions();
+    history.unshift({ ...pos, action: 'OPEN', status: 'FILLED' });
+    saveHistory();
+    toast(`${side === 'long' ? 'Long' : 'Short'} ${amt} ${m.s} @ ${fmtPrice(px)} — filled`, 'success');
+    renderPositions();
+  });
+
+  // Positions table
+  function renderPositions() {
+    document.getElementById('posCnt').textContent = positions.length;
+    document.getElementById('ordCnt').textContent = openOrders.length;
+    const el = document.getElementById('positionsContent');
+    if (!positions.length) {
+      el.innerHTML = '<div style="text-align: center; color: var(--text-faint); font-size: 12px; padding: 20px 0;">No open positions. Place a trade using the form on the right →</div>';
+      return;
+    }
+    el.innerHTML = `
+      <table class="tbl" style="background: transparent;">
+        <thead>
+          <tr><th>Pair</th><th>Side</th><th>Size</th><th>Entry</th><th>Mark</th><th>Liq.</th><th>PnL</th><th>Lev</th><th></th></tr>
+        </thead>
+        <tbody>
+          ${positions.map(p => {
+            const m = MARKETS.find(x => x.s === p.symbol);
+            const mark = m ? m.p : p.entryPrice;
+            const pnl = (mark - p.entryPrice) * p.amount * (p.side === 'long' ? 1 : -1);
+            const pnlPct = (mark / p.entryPrice - 1) * 100 * (p.side === 'long' ? 1 : -1) * p.leverage;
+            return `
+              <tr>
+                <td style="font-weight: 600;">${p.pair}</td>
+                <td><span class="chip ${p.side === 'long' ? 'green' : 'red'}">${p.side.toUpperCase()}</span></td>
+                <td class="mono">${p.amount.toFixed(4)}</td>
+                <td class="mono">${fmtPrice(p.entryPrice)}</td>
+                <td class="mono">${fmtPrice(mark)}</td>
+                <td class="mono text-faint">${fmtPrice(p.liqPrice)}</td>
+                <td class="mono ${pnl >= 0 ? 'up' : 'down'}">${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} <span style="font-size:10px;opacity:0.7;">(${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%)</span></td>
+                <td class="mono">${p.leverage}x</td>
+                <td><button class="btn-ghost" style="padding: 5px 10px; font-size: 11px;" onclick="closePosition('${p.id}')">Close</button></td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+  window.closePosition = function(id) {
+    const idx = positions.findIndex(p => p.id === id);
+    if (idx < 0) return;
+    const p = positions[idx];
+    history.unshift({ ...p, action: 'CLOSE', status: 'FILLED', closedAt: Date.now() });
+    saveHistory();
+    positions.splice(idx, 1);
+    savePositions();
+    toast(`Closed ${p.side} ${p.amount} ${p.symbol}`, 'success');
+    renderPositions();
+  };
+
+  // Positions tabs
+  document.querySelectorAll('.positions-tabs button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.positions-tabs button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      const el = document.getElementById('positionsContent');
+      if (b.dataset.tab === 'positions') renderPositions();
+      else if (b.dataset.tab === 'orders') {
+        el.innerHTML = openOrders.length
+          ? openOrders.map(o => `<div style="padding:8px 0;font-size:12px;">${o.pair} ${o.side} ${o.amount} @ ${fmtPrice(o.price)}</div>`).join('')
+          : '<div style="text-align: center; color: var(--text-faint); font-size: 12px; padding: 20px 0;">No open orders.</div>';
+      } else {
+        el.innerHTML = history.length
+          ? `<table class="tbl" style="background:transparent;"><thead><tr><th>Time</th><th>Pair</th><th>Action</th><th>Side</th><th>Amount</th><th>Price</th></tr></thead><tbody>
+              ${history.slice(0, 20).map(h => `
+                <tr>
+                  <td class="mono text-faint">${new Date(h.closedAt || h.timestamp).toLocaleString()}</td>
+                  <td>${h.pair}</td>
+                  <td><span class="chip ${h.action === 'OPEN' ? 'blue' : 'gray'}">${h.action}</span></td>
+                  <td><span class="chip ${h.side === 'long' ? 'green' : 'red'}">${h.side.toUpperCase()}</span></td>
+                  <td class="mono">${h.amount.toFixed(4)}</td>
+                  <td class="mono">${fmtPrice(h.entryPrice)}</td>
+                </tr>`).join('')}
+             </tbody></table>`
+          : '<div style="text-align: center; color: var(--text-faint); font-size: 12px; padding: 20px 0;">No trade history yet.</div>';
+      }
+    });
+  });
+
+  // Live price flicker
+  setInterval(() => {
+    const m = MARKETS.find(x => x.s === selectedPair);
+    if (!m) return;
+    const flicker = (Math.random() - 0.5) * m.p * 0.0003;
+    const p = m.p + flicker;
+    document.getElementById('mainPrice').textContent = fmtPrice(p);
+  }, 1500);
+
+  // Init
+  selectPair(selectedPair);
+  renderPairList();
+  renderPositions();
+</script>
+</body>
+</html>

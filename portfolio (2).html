@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Portfolio · MX1 Exchange</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .pf-top { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; margin-bottom: 18px; }
+  @media (max-width: 900px) { .pf-top { grid-template-columns: 1fr; } }
+
+  .balance-card {
+    padding: 28px; border-radius: 16px;
+    background:
+      radial-gradient(ellipse 500px 300px at 10% 30%, rgba(37, 99, 235, 0.3), transparent 70%),
+      radial-gradient(ellipse 400px 300px at 95% 70%, rgba(16, 185, 129, 0.22), transparent 70%),
+      linear-gradient(135deg, rgba(15, 32, 56, 0.9), rgba(6, 13, 28, 0.9));
+    border: 1px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+  .balance-card::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(56,189,248,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask: radial-gradient(ellipse at center, black 30%, transparent 80%);
+  }
+  .balance-label { font-size: 11px; color: var(--text-faint); letter-spacing: 0.8px; text-transform: uppercase; font-weight: 600; margin-bottom: 8px; position: relative; z-index: 1; }
+  .balance-main {
+    font-family: var(--font-display); font-size: 42px; font-weight: 800; letter-spacing: 1px;
+    background: var(--grad-logo); -webkit-background-clip: text; background-clip: text; color: transparent;
+    position: relative; z-index: 1;
+  }
+  .balance-sub { display: flex; align-items: center; gap: 12px; margin-top: 6px; position: relative; z-index: 1; font-size: 13px; }
+  .balance-sub .chip { padding: 3px 9px; font-size: 11px; }
+  .balance-chart { margin-top: 20px; height: 110px; position: relative; z-index: 1; }
+  .balance-chart svg { width: 100%; height: 100%; }
+  .balance-tf { display: flex; gap: 4px; margin-top: 12px; position: relative; z-index: 1; }
+  .balance-tf button { padding: 4px 10px; font-size: 11px; font-weight: 600; color: var(--text-dim); border-radius: 6px; font-family: var(--font-mono); }
+  .balance-tf button.active { color: var(--sky); background: rgba(56, 189, 248, 0.15); }
+
+  .quick-actions {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .qa-btn {
+    padding: 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 4px; transition: all 0.2s;
+    cursor: pointer; text-align: left;
+  }
+  .qa-btn:hover { border-color: var(--border-hi); transform: translateY(-1px); background: var(--surface-hi); }
+  .qa-btn .icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+  .qa-btn.dep .icon { background: rgba(16, 185, 129, 0.15); color: var(--green-hi); }
+  .qa-btn.wit .icon { background: rgba(56, 189, 248, 0.15); color: var(--sky); }
+  .qa-btn.buy .icon { background: rgba(37, 99, 235, 0.15); color: var(--blue-hi); }
+  .qa-btn.conv .icon { background: rgba(168, 85, 247, 0.15); color: #c4b5fd; }
+  .qa-btn .lbl { font-weight: 700; font-size: 14px; }
+  .qa-btn .sub { font-size: 11px; color: var(--text-faint); }
+
+  .pf-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px;
+  }
+  @media (max-width: 900px) { .pf-stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat-card { padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+  .stat-card .l { font-size: 10px; color: var(--text-faint); letter-spacing: 0.6px; text-transform: uppercase; font-weight: 600; }
+  .stat-card .v { font-family: var(--font-mono); font-size: 18px; font-weight: 700; margin-top: 4px; }
+  .stat-card .chg { font-size: 11px; margin-top: 2px; font-family: var(--font-mono); }
+
+  .pf-middle { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 18px; }
+  @media (max-width: 900px) { .pf-middle { grid-template-columns: 1fr; } }
+
+  .asset-chart-wrap { display: flex; align-items: center; gap: 20px; padding: 18px; }
+  .donut { width: 160px; height: 160px; flex-shrink: 0; position: relative; }
+  .donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .donut .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .donut .center .v { font-family: var(--font-mono); font-size: 16px; font-weight: 800; }
+  .donut .center .l { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .asset-legend { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .asset-leg-row { display: grid; grid-template-columns: auto 1fr auto auto; gap: 10px; align-items: center; font-size: 12px; padding: 4px 0; }
+  .leg-dot { width: 10px; height: 10px; border-radius: 3px; }
+  .leg-name { font-weight: 600; }
+  .leg-usd, .leg-pct { font-family: var(--font-mono); color: var(--text-dim); }
+
+  .pf-tabs { display: flex; gap: 20px; padding: 0 18px; border-bottom: 1px solid var(--border); }
+  .pf-tabs button { padding: 14px 0; font-size: 13px; font-weight: 600; color: var(--text-faint); border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .pf-tabs button.active { color: var(--text); border-bottom-color: var(--sky); }
+  .pf-tabs button .cnt { background: var(--bg-2); color: var(--sky); padding: 1px 7px; border-radius: 999px; font-size: 10px; margin-left: 4px; font-family: var(--font-mono); }
+
+  .empty-state { padding: 60px 20px; text-align: center; color: var(--text-faint); }
+  .empty-state h3 { font-family: var(--font-display); color: var(--text-dim); margin-bottom: 8px; letter-spacing: 0.5px; font-size: 15px; }
+  .empty-state p { font-size: 13px; max-width: 400px; margin: 0 auto; line-height: 1.5; }
+  .empty-state a { color: var(--sky); }
+</style>
+</head>
+<body>
+
+<script src="logo.js"></script>
+<script src="shared.js"></script>
+<script>
+  if (!initPage({ active: 'portfolio', requireAuth: true })) { /* redirected to login */ }
+</script>
+
+<main class="page">
+  <div class="page-head">
+    <div>
+      <h1>Portfolio</h1>
+      <div class="sub">Your positions, assets, orders, and followed traders — all in one place.</div>
+    </div>
+  </div>
+
+  <div class="pf-top">
+    <div class="balance-card">
+      <div class="balance-label">Total Equity (USDT)</div>
+      <div class="balance-main" id="totalEq">$30,452.18</div>
+      <div class="balance-sub">
+        <span class="chip green" id="pnl24h">+$482.33 · +1.61% (24h)</span>
+        <span style="color: var(--text-faint);">·</span>
+        <span style="color: var(--text-dim);">Spot + Margin + Futures</span>
+      </div>
+      <div class="balance-chart">
+        <svg id="equityChart" viewBox="0 0 800 110" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="balance-tf">
+        <button>24H</button>
+        <button class="active">7D</button>
+        <button>30D</button>
+        <button>90D</button>
+        <button>ALL</button>
+      </div>
+    </div>
+    <div class="quick-actions">
+      <button class="qa-btn dep" onclick="openDeposit()">
+        <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m19 14-7 7-7-7"/><path d="M12 21V3"/></svg></div>
+        <div class="lbl">Deposit</div>
+        <div class="sub">Crypto or fiat</div>
+      </button>
+      <button class="qa-btn wit" onclick="openWithdraw()">
+        <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 3v18"/><path d="m19 10-7-7-7 7"/></svg></div>
+        <div class="lbl">Withdraw</div>
+        <div class="sub">To wallet or bank</div>
+      </button>
+      <button class="qa-btn buy" onclick="location.href='p2p.html'">
+        <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="m12 7 5 5-5 5M7 12h10"/></svg></div>
+        <div class="lbl">Buy Crypto</div>
+        <div class="sub">P2P or card</div>
+      </button>
+      <button class="qa-btn conv" onclick="openConvert()">
+        <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m17 3 4 4-4 4M21 7H3M7 21l-4-4 4-4M3 17h18"/></svg></div>
+        <div class="lbl">Convert</div>
+        <div class="sub">Instant swap</div>
+      </button>
+    </div>
+  </div>
+
+  <div class="pf-stats">
+    <div class="stat-card"><div class="l">Total PnL</div><div class="v up" id="stTotPnl">+$4,218.44</div><div class="chg up">+13.85% lifetime</div></div>
+    <div class="stat-card"><div class="l">Open Positions</div><div class="v" id="stOpenPos">0</div><div class="chg text-faint" id="stOpenNotional">Notional $0</div></div>
+    <div class="stat-card"><div class="l">Win Rate</div><div class="v" id="stWinRate">68.4%</div><div class="chg text-faint">Last 30 days</div></div>
+    <div class="stat-card"><div class="l">Followed Traders</div><div class="v" id="stFollowed">0</div><div class="chg text-faint">Active copies</div></div>
+  </div>
+
+  <div class="pf-middle">
+    <div class="panel">
+      <div class="panel-header">
+        <span>Asset Allocation</span>
+        <a href="#" onclick="location.href='index.html';return false;" style="font-size: 11px; color: var(--sky); text-transform: none; letter-spacing: 0;">Rebalance →</a>
+      </div>
+      <div class="asset-chart-wrap" id="assetChartWrap"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <span>Followed Traders</span>
+        <a href="copy-trading.html" style="font-size: 11px; color: var(--sky); text-transform: none; letter-spacing: 0;">Browse →</a>
+      </div>
+      <div id="followedList" style="padding: 10px;"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="pf-tabs">
+      <button class="active" data-tab="positions">Open Positions <span class="cnt" id="posCnt">0</span></button>
+      <button data-tab="orders">Open Orders <span class="cnt" id="ordCnt">0</span></button>
+      <button data-tab="history">Trade History</button>
+      <button data-tab="launches">Launchpad Commits</button>
+    </div>
+    <div id="tableContent" style="min-height: 180px;"></div>
+  </div>
+</main>
+
+<script>
+  if (!MX1.session) throw new Error('not authed');
+
+  const positions = JSON.parse(localStorage.getItem('mx1_positions') || '[]');
+  const openOrders = JSON.parse(localStorage.getItem('mx1_orders') || '[]');
+  const history = JSON.parse(localStorage.getItem('mx1_history') || '[]');
+  const followed = JSON.parse(localStorage.getItem('mx1_followed') || '[]');
+  const launches = JSON.parse(localStorage.getItem('mx1_launches') || '[]');
+
+  // Compute totals
+  let notional = 0;
+  let openPnl = 0;
+  positions.forEach(p => {
+    const m = MARKETS.find(x => x.s === p.symbol);
+    const mark = m ? m.p : p.entryPrice;
+    const pnl = (mark - p.entryPrice) * p.amount * (p.side === 'long' ? 1 : -1);
+    notional += p.amount * mark;
+    openPnl += pnl;
+  });
+
+  document.getElementById('posCnt').textContent = positions.length;
+  document.getElementById('ordCnt').textContent = openOrders.length;
+  document.getElementById('stOpenPos').textContent = positions.length;
+  document.getElementById('stOpenNotional').textContent = 'Notional ' + fmtUSD(notional, 0);
+  document.getElementById('stFollowed').textContent = followed.length;
+
+  // Update total equity
+  const equity = MX1.session.balance + openPnl;
+  document.getElementById('totalEq').textContent = fmtUSD(equity, 2);
+
+  // Equity chart (fake 7-day seeded)
+  (function renderEquityChart() {
+    const svg = document.getElementById('equityChart');
+    const N = 60;
+    let seed = 42;
+    const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    const pts = [];
+    let y = 80;
+    for (let i = 0; i < N; i++) {
+      y += (rand() - 0.35) * 5;
+      y = Math.max(20, Math.min(95, y));
+      pts.push([i * (800 / (N - 1)), 110 - y]);
+    }
+    const ptsStr = pts.map(p => p.join(',')).join(' ');
+    svg.innerHTML = `
+      <defs>
+        <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#34d399" stop-opacity="0.45"/>
+          <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <polygon points="0,110 ${ptsStr} 800,110" fill="url(#eqGrad)"/>
+      <polyline points="${ptsStr}" fill="none" stroke="#34d399" stroke-width="2"/>
+    `;
+  })();
+
+  // Asset allocation donut
+  (function renderAllocation() {
+    const assets = [
+      { sym: 'USDT', name: 'Tether', usd: MX1.session.balance * 0.45, color: '#26a17b' },
+      { sym: 'BTC', name: 'Bitcoin', usd: MX1.session.balance * 0.25, color: '#f7931a' },
+      { sym: 'ETH', name: 'Ethereum', usd: MX1.session.balance * 0.15, color: '#627eea' },
+      { sym: 'SOL', name: 'Solana', usd: MX1.session.balance * 0.08, color: '#14f195' },
+      { sym: 'LINK', name: 'Chainlink', usd: MX1.session.balance * 0.04, color: '#2a5ada' },
+      { sym: 'Other', name: 'Others', usd: MX1.session.balance * 0.03, color: '#8fa0bd' },
+    ];
+    const total = assets.reduce((s, a) => s + a.usd, 0);
+    // Build donut SVG
+    const R = 50, cx = 60, cy = 60, strokeW = 18;
+    const circumference = 2 * Math.PI * R;
+    let acc = 0;
+    const arcs = assets.map(a => {
+      const pct = a.usd / total;
+      const dash = pct * circumference;
+      const offset = -acc * circumference;
+      acc += pct;
+      return `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${a.color}" stroke-width="${strokeW}" stroke-dasharray="${dash} ${circumference - dash}" stroke-dashoffset="${offset}" />`;
+    }).join('');
+    document.getElementById('assetChartWrap').innerHTML = `
+      <div class="donut">
+        <svg viewBox="0 0 120 120">${arcs}</svg>
+        <div class="center"><div class="v">${fmtUSD(total, 0)}</div><div class="l">Total Assets</div></div>
+      </div>
+      <div class="asset-legend">
+        ${assets.map(a => `
+          <div class="asset-leg-row">
+            <span class="leg-dot" style="background: ${a.color};"></span>
+            <span class="leg-name">${a.sym} <span style="color: var(--text-faint); font-weight: 400; font-size: 11px;">${a.name}</span></span>
+            <span class="leg-usd">${fmtUSD(a.usd, 0)}</span>
+            <span class="leg-pct">${((a.usd / total) * 100).toFixed(1)}%</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  })();
+
+  // Followed traders list
+  (function renderFollowed() {
+    const el = document.getElementById('followedList');
+    if (!followed.length) {
+      el.innerHTML = '<div class="empty-state" style="padding: 30px 20px;"><p>You\'re not copying anyone yet. <a href="copy-trading.html">Find traders →</a></p></div>';
+      return;
+    }
+    el.innerHTML = followed.map(f => {
+      const days = Math.max(1, Math.floor((Date.now() - f.startedAt) / 86400000));
+      const fakePnl = f.amount * (Math.random() * 0.15 - 0.03);
+      return `
+        <div style="display: flex; justify-content: space-between; padding: 12px 10px; border-bottom: 1px solid var(--border); align-items: center;">
+          <div>
+            <div style="font-weight: 600; font-size: 13px;">${f.name}</div>
+            <div style="color: var(--text-faint); font-size: 11px; margin-top: 2px;">Allocated ${fmtUSD(f.amount, 0)} · ${days}d</div>
+          </div>
+          <div style="text-align: right;">
+            <div class="mono ${fakePnl >= 0 ? 'up' : 'down'}" style="font-weight: 700; font-size: 13px;">${fakePnl >= 0 ? '+' : ''}${fmtUSD(fakePnl, 2)}</div>
+            <button style="margin-top: 4px; font-size: 10px; color: var(--red-hi);" onclick="stopCopy(${f.traderId})">Stop</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  })();
+
+  window.stopCopy = function(traderId) {
+    const idx = followed.findIndex(f => f.traderId === traderId);
+    if (idx < 0) return;
+    const f = followed[idx];
+    modal({
+      title: 'Stop Copying',
+      body: `<p>Stop copying <strong>${f.name}</strong>? Open positions they've opened on your behalf will remain; you'll just stop mirroring new trades.</p>`,
+      width: 400,
+      actions: [
+        { label: 'Cancel', class: 'btn-ghost' },
+        { label: 'Stop Copying', class: 'btn-danger', onClick: close => {
+          followed.splice(idx, 1);
+          localStorage.setItem('mx1_followed', JSON.stringify(followed));
+          close();
+          location.reload();
+        }}
+      ]
+    });
+  };
+
+  // ---------- Tables ----------
+  let currentTab = 'positions';
+  function renderTable() {
+    const el = document.getElementById('tableContent');
+    if (currentTab === 'positions') {
+      if (!positions.length) {
+        el.innerHTML = `<div class="empty-state"><h3>No open positions</h3><p>Head to the <a href="index.html">Trade</a> page to open your first long or short.</p></div>`;
+        return;
+      }
+      el.innerHTML = `<table class="tbl">
+        <thead><tr><th>Pair</th><th>Side</th><th>Size</th><th>Entry</th><th>Mark</th><th>Liq.</th><th>PnL</th><th>Leverage</th><th>Opened</th><th></th></tr></thead>
+        <tbody>${positions.map(p => {
+          const m = MARKETS.find(x => x.s === p.symbol);
+          const mark = m ? m.p : p.entryPrice;
+          const pnl = (mark - p.entryPrice) * p.amount * (p.side === 'long' ? 1 : -1);
+          const pnlPct = (mark / p.entryPrice - 1) * 100 * (p.side === 'long' ? 1 : -1) * p.leverage;
+          return `<tr>
+            <td style="font-weight: 600;">${p.pair}</td>
+            <td><span class="chip ${p.side === 'long' ? 'green' : 'red'}">${p.side.toUpperCase()}</span></td>
+            <td class="mono">${p.amount.toFixed(4)}</td>
+            <td class="mono">${fmtPrice(p.entryPrice)}</td>
+            <td class="mono">${fmtPrice(mark)}</td>
+            <td class="mono text-faint">${fmtPrice(p.liqPrice)}</td>
+            <td class="mono ${pnl >= 0 ? 'up' : 'down'}">${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} <span style="font-size: 10px; opacity: 0.7;">(${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%)</span></td>
+            <td class="mono">${p.leverage}x</td>
+            <td class="mono text-faint">${timeAgo(p.timestamp)}</td>
+            <td><button class="btn-ghost" style="padding: 5px 10px; font-size: 11px;" onclick="closePos('${p.id}')">Close</button></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
+    } else if (currentTab === 'orders') {
+      if (!openOrders.length) {
+        el.innerHTML = `<div class="empty-state"><h3>No open orders</h3><p>Limit and stop orders you place will appear here.</p></div>`;
+        return;
+      }
+      el.innerHTML = `<table class="tbl"><thead><tr><th>Time</th><th>Pair</th><th>Type</th><th>Side</th><th>Price</th><th>Amount</th><th>Status</th></tr></thead><tbody>
+        ${openOrders.map(o => `<tr>
+          <td class="mono text-faint">${new Date(o.timestamp).toLocaleString()}</td>
+          <td>${o.pair}</td><td>${o.type || 'Limit'}</td>
+          <td><span class="chip ${o.side === 'long' ? 'green' : 'red'}">${(o.side || '').toUpperCase()}</span></td>
+          <td class="mono">${fmtPrice(o.price)}</td>
+          <td class="mono">${o.amount}</td>
+          <td><span class="chip blue">PENDING</span></td>
+        </tr>`).join('')}
+      </tbody></table>`;
+    } else if (currentTab === 'history') {
+      if (!history.length) {
+        el.innerHTML = `<div class="empty-state"><h3>No trade history</h3><p>Your filled orders and closed positions will show up here.</p></div>`;
+        return;
+      }
+      el.innerHTML = `<table class="tbl"><thead><tr><th>Time</th><th>Pair</th><th>Action</th><th>Side</th><th>Amount</th><th>Price</th><th>Leverage</th></tr></thead><tbody>
+        ${history.slice(0, 50).map(h => `<tr>
+          <td class="mono text-faint">${new Date(h.closedAt || h.timestamp).toLocaleString()}</td>
+          <td>${h.pair}</td>
+          <td><span class="chip ${h.action === 'OPEN' ? 'blue' : 'gray'}">${h.action}</span></td>
+          <td><span class="chip ${h.side === 'long' ? 'green' : 'red'}">${h.side.toUpperCase()}</span></td>
+          <td class="mono">${h.amount.toFixed(4)}</td>
+          <td class="mono">${fmtPrice(h.entryPrice)}</td>
+          <td class="mono">${h.leverage}x</td>
+        </tr>`).join('')}
+      </tbody></table>`;
+    } else if (currentTab === 'launches') {
+      if (!launches.length) {
+        el.innerHTML = `<div class="empty-state"><h3>No launchpad commits</h3><p>Browse upcoming token launches on the <a href="launchpad.html">Launchpad →</a></p></div>`;
+        return;
+      }
+      el.innerHTML = `<div style="padding: 16px;"><p style="color: var(--text-dim); font-size: 13px; margin-bottom: 12px;">You've participated in ${launches.length} launch${launches.length === 1 ? '' : 'es'}. Tokens will vest per the schedule of each project.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+          ${launches.map(id => `<span class="chip blue" style="padding: 8px 14px;">Project #${id + 1} · Active</span>`).join('')}
+        </div>
+      </div>`;
+    }
+  }
+
+  window.closePos = function(id) {
+    const idx = positions.findIndex(p => p.id === id);
+    if (idx < 0) return;
+    const p = positions[idx];
+    history.unshift({ ...p, action: 'CLOSE', status: 'FILLED', closedAt: Date.now() });
+    localStorage.setItem('mx1_history', JSON.stringify(history));
+    positions.splice(idx, 1);
+    localStorage.setItem('mx1_positions', JSON.stringify(positions));
+    toast(`Closed ${p.side} ${p.amount} ${p.symbol}`, 'success');
+    setTimeout(() => location.reload(), 400);
+  };
+
+  function timeAgo(ts) {
+    const s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 60) return s + 's ago';
+    if (s < 3600) return Math.floor(s / 60) + 'm ago';
+    if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+    return Math.floor(s / 86400) + 'd ago';
+  }
+
+  document.querySelectorAll('.pf-tabs button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.pf-tabs button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      currentTab = b.dataset.tab;
+      renderTable();
+    });
+  });
+  renderTable();
+
+  // ---------- Deposit / Withdraw modals ----------
+  function openDeposit() {
+    modal({
+      title: 'Deposit Funds',
+      width: 480,
+      body: `
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="tabs">
+            <button class="active">Crypto</button>
+            <button onclick="toast('Fiat deposit window opened (demo)', 'info')">Fiat</button>
+          </div>
+          <div class="field"><label>Select Coin</label>
+            <select><option>USDT - Tether</option><option>BTC - Bitcoin</option><option>ETH - Ethereum</option></select>
+          </div>
+          <div class="field"><label>Network</label>
+            <select><option>TRC20 (Tron) · Fast, low fee</option><option>ERC20 (Ethereum)</option><option>BEP20 (BSC)</option></select>
+          </div>
+          <div class="field"><label>Deposit Address</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="text" value="TXYZabc123MX1depositAddress456def789" readonly style="font-family: var(--font-mono); font-size: 12px;" />
+              <button class="btn-ghost" style="flex-shrink: 0; padding: 10px 14px;" onclick="toast('Address copied.', 'success')">Copy</button>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--bg-2); border-radius: 10px;">
+            <div style="width: 140px; height: 140px; background: white; padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 60px;">⬚</div>
+          </div>
+          <div style="padding: 10px 12px; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.25); border-radius: 8px; font-size: 11px; color: var(--amber); line-height: 1.5;">
+            ⚠ Send only USDT on TRC20 to this address. Min deposit: 10 USDT. Network fee: 1 USDT. Credits after 1 confirmation.
+          </div>
+        </div>
+      `
+    });
+  }
+
+  function openWithdraw() {
+    modal({
+      title: 'Withdraw Funds',
+      width: 480,
+      body: `
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="field"><label>Select Coin</label>
+            <select><option>USDT - Tether · ${fmtUSD(MX1.session.balance * 0.45, 2)}</option><option>BTC - Bitcoin</option><option>ETH - Ethereum</option></select>
+          </div>
+          <div class="field"><label>Network</label>
+            <select><option>TRC20 (Tron) · 1 USDT fee</option><option>ERC20 · 14 USDT fee</option></select>
+          </div>
+          <div class="field"><label>Destination Address</label>
+            <input type="text" placeholder="T... (TRC20 USDT address)" />
+          </div>
+          <div class="field"><label>Amount</label>
+            <input type="number" placeholder="0.00" />
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-faint); margin-top: 4px;">
+              <span>Available: ${fmtUSD(MX1.session.balance * 0.45, 2)}</span>
+              <a href="#" style="color: var(--sky);">Max</a>
+            </div>
+          </div>
+          <div style="padding: 10px 12px; background: var(--bg-2); border-radius: 8px; font-size: 12px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span class="text-faint">Network Fee</span><span class="mono">1.00 USDT</span></div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span class="text-faint">You Receive</span><span class="mono" style="color: var(--green-hi); font-weight: 700;">0.00 USDT</span></div>
+            <div style="display: flex; justify-content: space-between;"><span class="text-faint">Processing</span><span>2FA + email confirm</span></div>
+          </div>
+        </div>
+      `,
+      actions: [
+        { label: 'Cancel', class: 'btn-ghost' },
+        { label: 'Request Withdrawal', class: 'btn-primary', onClick: close => { close(); toast('Withdrawal request sent. Check email for 2FA confirmation.', 'success', 4000); } }
+      ]
+    });
+  }
+
+  function openConvert() {
+    modal({
+      title: 'Instant Convert',
+      width: 440,
+      body: `
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="field"><label>From</label>
+            <div style="display: grid; grid-template-columns: 130px 1fr; gap: 8px;">
+              <select><option>USDT</option><option>BTC</option><option>ETH</option></select>
+              <input type="number" placeholder="0.00" />
+            </div>
+          </div>
+          <div style="text-align: center; color: var(--text-faint);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 10v4h10l-3-3M17 14v-4H7l3 3"/></svg>
+          </div>
+          <div class="field"><label>To</label>
+            <div style="display: grid; grid-template-columns: 130px 1fr; gap: 8px;">
+              <select><option>BTC</option><option>ETH</option><option>SOL</option></select>
+              <input type="number" placeholder="0.00" readonly />
+            </div>
+          </div>
+          <div style="padding: 10px 12px; background: var(--bg-2); border-radius: 8px; font-size: 12px; display: flex; justify-content: space-between;">
+            <span class="text-faint">Rate</span>
+            <span class="mono">1 BTC = 88,508.76 USDT</span>
+          </div>
+        </div>
+      `,
+      actions: [
+        { label: 'Cancel', class: 'btn-ghost' },
+        { label: 'Convert', class: 'btn-primary', onClick: close => { close(); toast('Conversion executed at market rate.', 'success'); } }
+      ]
+    });
+  }
+  window.openDeposit = openDeposit;
+  window.openWithdraw = openWithdraw;
+  window.openConvert = openConvert;
+</script>
+</body>
+</html>

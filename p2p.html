@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>P2P · MX1 Exchange</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .p2p-top-bar {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .bs-tabs {
+    display: flex; background: var(--bg-1); border: 1px solid var(--border); border-radius: 10px; padding: 4px; gap: 4px;
+  }
+  .bs-tabs button {
+    padding: 10px 28px; font-size: 14px; font-weight: 700; letter-spacing: 0.5px;
+    border-radius: 8px; transition: all 0.2s; color: var(--text-dim);
+  }
+  .bs-tabs button.active.buy { background: linear-gradient(135deg, var(--green), var(--emerald)); color: white; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35); }
+  .bs-tabs button.active.sell { background: linear-gradient(135deg, var(--red), #dc2626); color: white; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35); }
+
+  .coin-tabs { display: flex; gap: 4px; }
+  .coin-tabs button { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--text-dim); background: var(--surface); border: 1px solid var(--border); }
+  .coin-tabs button.active { color: var(--sky); border-color: var(--border-hi); background: rgba(56, 189, 248, 0.08); }
+
+  .filter-controls {
+    display: grid; grid-template-columns: repeat(4, 1fr) auto;
+    gap: 10px;
+    padding: 14px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 14px; align-items: end;
+  }
+  .filter-controls .field label { margin-bottom: 4px; }
+  .filter-controls input, .filter-controls select { padding: 9px 12px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 12px; outline: none; }
+  .filter-controls button { padding: 9px 18px; }
+
+  .offers-list { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .offers-head { display: grid; grid-template-columns: 2fr 1.2fr 1fr 1.5fr 2fr 1fr; padding: 14px 18px; background: var(--bg-1); border-bottom: 1px solid var(--border); font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; }
+  .offer-row {
+    display: grid; grid-template-columns: 2fr 1.2fr 1fr 1.5fr 2fr 1fr;
+    padding: 16px 18px; border-bottom: 1px solid var(--border);
+    align-items: center; transition: background 0.15s;
+  }
+  .offer-row:hover { background: rgba(56, 189, 248, 0.03); }
+  .offer-row:last-child { border-bottom: none; }
+
+  .merchant { display: flex; gap: 12px; align-items: center; }
+  .merchant .av { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-family: var(--font-display); font-size: 13px; position: relative; }
+  .merchant .av .online { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: var(--green); border-radius: 50%; border: 2px solid var(--bg-0); }
+  .merchant .info { display: flex; flex-direction: column; gap: 2px; }
+  .merchant .name-row { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; }
+  .merchant .verified { color: var(--sky); display: inline-flex; }
+  .merchant .badge { font-size: 10px; padding: 1px 6px; background: var(--bg-2); border-radius: 4px; color: var(--text-dim); }
+  .merchant .stats { font-size: 11px; color: var(--text-faint); display: flex; gap: 10px; }
+
+  .price-col .p { font-family: var(--font-mono); font-size: 16px; font-weight: 700; }
+  .price-col .unit { font-size: 11px; color: var(--text-faint); }
+
+  .limit-col { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+  .limit-col .avail { color: var(--text); font-weight: 600; }
+
+  .payment-methods { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pay-chip { padding: 4px 10px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px; font-size: 11px; font-weight: 500; color: var(--text-dim); border-left: 3px solid; }
+  .pay-chip.bank { border-left-color: var(--sky); }
+  .pay-chip.paypal { border-left-color: #003087; }
+  .pay-chip.zelle { border-left-color: #6d1ed4; }
+  .pay-chip.venmo { border-left-color: #008cff; }
+  .pay-chip.card { border-left-color: var(--amber); }
+  .pay-chip.wise { border-left-color: var(--green); }
+  .pay-chip.cashapp { border-left-color: var(--green); }
+  .pay-chip.revolut { border-left-color: var(--text); }
+
+  .action-btn { padding: 10px 22px; border-radius: 8px; font-weight: 700; font-size: 13px; letter-spacing: 0.3px; transition: all 0.2s; }
+  .action-btn.buy { background: linear-gradient(135deg, var(--green), var(--emerald)); color: white; box-shadow: 0 3px 12px rgba(16, 185, 129, 0.3); }
+  .action-btn.buy:hover { transform: translateY(-1px); box-shadow: 0 5px 18px rgba(16, 185, 129, 0.45); }
+  .action-btn.sell { background: linear-gradient(135deg, var(--red), #dc2626); color: white; box-shadow: 0 3px 12px rgba(239, 68, 68, 0.3); }
+
+  /* Trade modal two-col */
+  .trade-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .trade-layout .box { padding: 14px; background: var(--bg-2); border-radius: 10px; }
+  .trade-layout .box h4 { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .trade-layout .box .line { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+  .trade-layout .box .line .k { color: var(--text-faint); }
+</style>
+</head>
+<body>
+
+<script src="logo.js"></script>
+<script src="shared.js"></script>
+<script>initPage({ active: 'p2p' });</script>
+
+<main class="page">
+  <div class="page-head">
+    <div>
+      <h1>P2P Trading</h1>
+      <div class="sub">Buy and sell crypto directly with other users using your preferred payment method. Zero fees, escrow protected.</div>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <button class="btn-ghost" onclick="openPostOffer()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Post Offer
+      </button>
+      <button class="btn-ghost" onclick="toast('Opened P2P support chat (demo)', 'info')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Support
+      </button>
+    </div>
+  </div>
+
+  <div class="p2p-top-bar">
+    <div class="bs-tabs">
+      <button id="buyTab" class="active buy">I want to BUY</button>
+      <button id="sellTab" class="sell">I want to SELL</button>
+    </div>
+    <div class="coin-tabs" id="coinTabs">
+      <button class="active" data-coin="USDT">USDT</button>
+      <button data-coin="BTC">BTC</button>
+      <button data-coin="ETH">ETH</button>
+      <button data-coin="BNB">BNB</button>
+      <button data-coin="SOL">SOL</button>
+    </div>
+  </div>
+
+  <div class="filter-controls">
+    <div class="field">
+      <label>Amount</label>
+      <input id="filterAmount" type="number" placeholder="Any amount" />
+    </div>
+    <div class="field">
+      <label>Fiat Currency</label>
+      <select id="filterFiat">
+        <option>USD</option><option>EUR</option><option>GBP</option><option>CAD</option><option>AUD</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Payment Method</label>
+      <select id="filterPayment">
+        <option value="">All payment methods</option>
+        <option>Bank Transfer</option>
+        <option>PayPal</option>
+        <option>Zelle</option>
+        <option>Venmo</option>
+        <option>Cash App</option>
+        <option>Wise</option>
+        <option>Revolut</option>
+        <option>Credit Card</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Sort</label>
+      <select id="filterSort">
+        <option value="price">Best Price</option>
+        <option value="rating">Top Rated</option>
+        <option value="volume">Most Orders</option>
+      </select>
+    </div>
+    <button class="btn-ghost" onclick="render()" style="height: 38px;">Search</button>
+  </div>
+
+  <div class="offers-list">
+    <div class="offers-head">
+      <span>Advertiser</span>
+      <span>Price</span>
+      <span>Available</span>
+      <span>Limits</span>
+      <span>Payment</span>
+      <span style="text-align: right;">Trade</span>
+    </div>
+    <div id="offersBody"></div>
+  </div>
+</main>
+
+<script>
+  let mode = 'buy';
+  let coin = 'USDT';
+
+  const COIN_PRICES = { USDT: 1.000, BTC: 88508.76, ETH: 3214.52, BNB: 612.44, SOL: 184.37 };
+  const FIRST_NAMES = ['Michael', 'Sarah', 'David', 'Emily', 'Carlos', 'Aisha', 'Liam', 'Zara', 'Oliver', 'Fatima', 'Lucas', 'Mei', 'Arjun', 'Isabella', 'Noah', 'Priya', 'Ethan', 'Yuki', 'Daniel', 'Sofia'];
+  const LAST_INITS = ['K', 'M', 'R', 'T', 'L', 'S', 'W', 'P', 'C', 'H', 'N', 'G'];
+  const PAYMENTS = [
+    ['Bank Transfer', 'bank'],
+    ['PayPal', 'paypal'],
+    ['Zelle', 'zelle'],
+    ['Venmo', 'venmo'],
+    ['Cash App', 'cashapp'],
+    ['Wise', 'wise'],
+    ['Revolut', 'revolut'],
+    ['Credit Card', 'card'],
+  ];
+  const GRADS = [
+    'linear-gradient(135deg, #2563eb, #10b981)',
+    'linear-gradient(135deg, #7c3aed, #3b82f6)',
+    'linear-gradient(135deg, #14b8a6, #2563eb)',
+    'linear-gradient(135deg, #db2777, #8b5cf6)',
+    'linear-gradient(135deg, #f59e0b, #ef4444)',
+    'linear-gradient(135deg, #06b6d4, #10b981)',
+  ];
+
+  const OFFERS = Array.from({ length: 36 }, (_, i) => {
+    const basePrice = COIN_PRICES[['USDT', 'BTC', 'ETH', 'BNB', 'SOL'][i % 5]];
+    const spread = (Math.random() - 0.3) * 0.02; // mostly positive premium
+    const orders = Math.floor(80 + Math.random() * 3500);
+    const completion = (95 + Math.random() * 4.8).toFixed(1);
+    const rating = (4.5 + Math.random() * 0.5).toFixed(2);
+    const paymentCount = 1 + Math.floor(Math.random() * 3);
+    const payments = [...PAYMENTS].sort(() => 0.5 - Math.random()).slice(0, paymentCount);
+    return {
+      id: i,
+      advertiser: `${FIRST_NAMES[i % FIRST_NAMES.length]}${LAST_INITS[i % LAST_INITS.length]}`,
+      verified: Math.random() > 0.25,
+      merchant: Math.random() > 0.6,
+      orders, completion, rating,
+      gradient: GRADS[i % GRADS.length],
+      spread,
+      available: Math.floor(100 + Math.random() * 500000),
+      minLimit: [100, 200, 500, 1000][i % 4],
+      maxLimit: [2000, 5000, 10000, 50000, 100000][i % 5],
+      payments,
+      coins: ['USDT', 'BTC', 'ETH', 'BNB', 'SOL'],
+      mode: Math.random() > 0.5 ? 'buy' : 'sell',
+    };
+  });
+
+  function render() {
+    const amountFilter = parseFloat(document.getElementById('filterAmount').value);
+    const paymentFilter = document.getElementById('filterPayment').value;
+    const sortBy = document.getElementById('filterSort').value;
+
+    let list = OFFERS.filter(o => o.coins.includes(coin));
+    if (amountFilter > 0) list = list.filter(o => o.available >= amountFilter && amountFilter >= o.minLimit && amountFilter <= o.maxLimit);
+    if (paymentFilter) list = list.filter(o => o.payments.some(p => p[0] === paymentFilter));
+    list.sort((a, b) => {
+      if (sortBy === 'price') return mode === 'buy' ? a.spread - b.spread : b.spread - a.spread;
+      if (sortBy === 'rating') return parseFloat(b.rating) - parseFloat(a.rating);
+      if (sortBy === 'volume') return b.orders - a.orders;
+    });
+    list = list.slice(0, 14);
+
+    const basePrice = COIN_PRICES[coin];
+    document.getElementById('offersBody').innerHTML = list.map(o => {
+      const priceFinal = basePrice * (1 + o.spread);
+      return `
+        <div class="offer-row">
+          <div class="merchant">
+            <div class="av" style="background: ${o.gradient};">
+              ${o.advertiser.slice(0, 2)}
+              <span class="online"></span>
+            </div>
+            <div class="info">
+              <div class="name-row">
+                ${o.advertiser}
+                ${o.verified ? '<svg class="verified" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 9.5 4.5 6 4l-1 3.5-3 1.5 1.5 3.5L2 16l3 1.5L6 21l3.5-.5L12 23l2.5-2.5L18 21l1-3.5 3-1.5-1.5-3.5L22 9l-3-1.5L18 4l-3.5.5L12 2zm-1 13-4-4 1.4-1.4L11 12.2l5.6-5.6L18 8l-7 7z"/></svg>' : ''}
+                ${o.merchant ? '<span class="badge" style="color:var(--amber);border:1px solid rgba(251,191,36,0.3);">MERCHANT</span>' : ''}
+              </div>
+              <div class="stats">
+                <span>${o.orders.toLocaleString()} orders</span>
+                <span>${o.completion}% completion</span>
+                <span>★ ${o.rating}</span>
+              </div>
+            </div>
+          </div>
+          <div class="price-col">
+            <div class="p">${fmtPrice(priceFinal)}</div>
+            <div class="unit">USD / ${coin}</div>
+          </div>
+          <div class="limit-col">
+            <div class="avail">${o.available.toLocaleString()} ${coin}</div>
+          </div>
+          <div class="limit-col">
+            <div>Min: $${o.minLimit.toLocaleString()}</div>
+            <div>Max: $${o.maxLimit.toLocaleString()}</div>
+          </div>
+          <div class="payment-methods">
+            ${o.payments.map(p => `<span class="pay-chip ${p[1]}">${p[0]}</span>`).join('')}
+          </div>
+          <div style="text-align: right;">
+            <button class="action-btn ${mode}" onclick="startTrade(${o.id})">${mode === 'buy' ? 'Buy' : 'Sell'} ${coin}</button>
+          </div>
+        </div>
+      `;
+    }).join('') || '<div style="padding: 60px 20px; text-align: center; color: var(--text-faint); font-size: 13px;">No offers match your filters. Try adjusting payment method or amount.</div>';
+  }
+
+  document.getElementById('buyTab').addEventListener('click', () => {
+    mode = 'buy';
+    document.getElementById('buyTab').classList.add('active');
+    document.getElementById('sellTab').classList.remove('active');
+    render();
+  });
+  document.getElementById('sellTab').addEventListener('click', () => {
+    mode = 'sell';
+    document.getElementById('sellTab').classList.add('active');
+    document.getElementById('buyTab').classList.remove('active');
+    render();
+  });
+
+  document.querySelectorAll('#coinTabs button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#coinTabs button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      coin = b.dataset.coin;
+      render();
+    });
+  });
+
+  document.getElementById('filterSort').addEventListener('change', render);
+  document.getElementById('filterPayment').addEventListener('change', render);
+  document.getElementById('filterAmount').addEventListener('input', render);
+
+  window.startTrade = function(id) {
+    if (!MX1.session) {
+      toast('Please sign in to start a P2P trade.', 'error');
+      setTimeout(() => location.href = 'login.html?next=p2p.html', 800);
+      return;
+    }
+    const o = OFFERS.find(x => x.id === id);
+    const basePrice = COIN_PRICES[coin];
+    const priceFinal = basePrice * (1 + o.spread);
+    const body = `
+      <div class="trade-layout">
+        <div class="box">
+          <h4>Order Details</h4>
+          <div class="field" style="margin-bottom: 10px;">
+            <label>Pay (USD)</label>
+            <input type="number" id="p2pFiatAmt" value="${o.minLimit}" min="${o.minLimit}" max="${o.maxLimit}" />
+          </div>
+          <div class="field">
+            <label>Receive (${coin})</label>
+            <input type="text" id="p2pCryptoAmt" value="${(o.minLimit / priceFinal).toFixed(coin === 'USDT' ? 2 : 6)}" readonly />
+          </div>
+          <div style="margin-top: 12px;">
+            <div class="line"><span class="k">Price</span><span class="mono">${fmtPrice(priceFinal)} USD</span></div>
+            <div class="line"><span class="k">Limit</span><span class="mono">$${o.minLimit} - $${o.maxLimit.toLocaleString()}</span></div>
+            <div class="line"><span class="k">Payment</span><span>${o.payments[0][0]}</span></div>
+          </div>
+        </div>
+        <div class="box">
+          <h4>Advertiser</h4>
+          <div style="display:flex;gap:10px;margin-bottom:12px;align-items:center;">
+            <div style="width:40px;height:40px;border-radius:50%;background:${o.gradient};display:flex;align-items:center;justify-content:center;font-weight:700;color:white;">${o.advertiser.slice(0,2)}</div>
+            <div>
+              <div style="font-weight:600;">${o.advertiser}</div>
+              <div style="font-size:11px;color:var(--text-faint);">${o.orders.toLocaleString()} orders · ${o.completion}%</div>
+            </div>
+          </div>
+          <div class="line"><span class="k">Escrow</span><span style="color:var(--green-hi);">Protected</span></div>
+          <div class="line"><span class="k">Avg. release</span><span class="mono">7 min</span></div>
+          <div class="line"><span class="k">Payment window</span><span class="mono">15 min</span></div>
+          <div style="margin-top:14px;padding:10px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:8px;font-size:11px;color:var(--amber);line-height:1.4;">
+            ⚠ Never release funds before receiving payment confirmation. MX1 holds the crypto in escrow.
+          </div>
+        </div>
+      </div>
+    `;
+    const m = modal({
+      title: `${mode === 'buy' ? 'Buy' : 'Sell'} ${coin} from ${o.advertiser}`,
+      body, width: 720,
+      actions: [
+        { label: 'Cancel', class: 'btn-ghost' },
+        { label: `Confirm ${mode === 'buy' ? 'Buy' : 'Sell'}`, class: mode === 'buy' ? 'btn-success' : 'btn-danger', onClick: close => {
+          close();
+          toast(`Order placed with ${o.advertiser}. Chat window opened.`, 'success', 4000);
+        }}
+      ]
+    });
+    // Link the two inputs
+    m.el.querySelector('#p2pFiatAmt').addEventListener('input', e => {
+      const v = parseFloat(e.target.value) || 0;
+      m.el.querySelector('#p2pCryptoAmt').value = (v / priceFinal).toFixed(coin === 'USDT' ? 2 : 6);
+    });
+  };
+
+  function openPostOffer() {
+    if (!MX1.session) { toast('Please sign in first.', 'error'); return; }
+    modal({
+      title: 'Post P2P Offer',
+      width: 520,
+      body: `
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="field"><label>I want to</label><select><option>Sell crypto for fiat</option><option>Buy crypto with fiat</option></select></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="field"><label>Asset</label><select><option>USDT</option><option>BTC</option><option>ETH</option></select></div>
+            <div class="field"><label>Fiat</label><select><option>USD</option><option>EUR</option></select></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="field"><label>Price per coin</label><input type="number" value="1.002" step="0.0001" /></div>
+            <div class="field"><label>Amount</label><input type="number" value="1000" /></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="field"><label>Min order</label><input type="number" value="100" /></div>
+            <div class="field"><label>Max order</label><input type="number" value="5000" /></div>
+          </div>
+          <div class="field"><label>Payment methods</label><select multiple size="4"><option>Bank Transfer</option><option>PayPal</option><option>Zelle</option><option>Venmo</option><option>Wise</option></select></div>
+        </div>
+      `,
+      actions: [
+        { label: 'Cancel', class: 'btn-ghost' },
+        { label: 'Publish Offer', class: 'btn-primary', onClick: close => { close(); toast('Offer published to P2P marketplace.', 'success'); } }
+      ]
+    });
+  }
+
+  render();
+</script>
+</body>
+</html>

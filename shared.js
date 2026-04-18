@@ -115,6 +115,10 @@ function buildTopbar(active) {
         <button class="icon-btn" title="Search" onclick="openSearchModal()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         </button>
+        <button class="icon-btn theme-toggle" title="Toggle theme" onclick="toggleTheme()">
+          <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        </button>
         <button class="icon-btn" title="Notifications">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
         </button>
@@ -274,10 +278,36 @@ function openSearchModal() {
   render();
 }
 
+// ---------- Theme (dark / light) ----------
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('mx1_theme', theme);
+  // Swap icons in topbar if present
+  const moon = document.querySelector('.theme-toggle .icon-moon');
+  const sun = document.querySelector('.theme-toggle .icon-sun');
+  if (moon && sun) {
+    if (theme === 'light') { moon.style.display = 'none'; sun.style.display = ''; }
+    else { moon.style.display = ''; sun.style.display = 'none'; }
+  }
+}
+function toggleTheme() {
+  const current = localStorage.getItem('mx1_theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  if (typeof toast === 'function') toast(`${next === 'dark' ? 'Dark' : 'Light'} mode enabled`, 'info', 1500);
+}
+// Apply saved theme IMMEDIATELY on script load (before topbar build) to avoid flash
+(function initTheme() {
+  const saved = localStorage.getItem('mx1_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+})();
+
 // ---------- Init helper ----------
 function initPage({ active, requireAuth = false } = {}) {
   if (requireAuth && !MX1.requireAuth()) return false;
   buildTopbar(active);
   buildFooter();
+  // Re-apply theme now that topbar exists (so icon swaps correctly)
+  applyTheme(localStorage.getItem('mx1_theme') || 'dark');
   return true;
 }

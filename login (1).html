@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Log In · MX1 Exchange</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .auth-wrap {
+    min-height: 100vh;
+    display: grid; grid-template-columns: 1fr 520px;
+  }
+  .auth-hero {
+    padding: 40px 60px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    background:
+      radial-gradient(ellipse 600px 400px at 20% 30%, rgba(37, 99, 235, 0.25), transparent 70%),
+      radial-gradient(ellipse 500px 400px at 80% 80%, rgba(16, 185, 129, 0.2), transparent 70%);
+    position: relative; overflow: hidden;
+  }
+  .auth-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 90%);
+  }
+  .hero-brand { display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; }
+  .hero-brand img { width: 48px; height: 48px; border-radius: 10px; box-shadow: 0 0 28px rgba(37, 99, 235, 0.5); }
+  .hero-brand .mark { font-family: var(--font-display); font-weight: 900; font-size: 26px; letter-spacing: 3px; background: var(--grad-logo); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero-brand .sub { font-size: 10px; letter-spacing: 4px; color: var(--text-faint); font-weight: 600; margin-top: 4px; }
+
+  .hero-content { position: relative; z-index: 1; max-width: 540px; }
+  .hero-content h1 {
+    font-family: var(--font-display); font-size: 52px; font-weight: 800; line-height: 1.05; letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+  .hero-content h1 .grad { background: var(--grad-logo); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero-content p { color: var(--text-dim); font-size: 15px; line-height: 1.6; margin-bottom: 28px; }
+
+  .hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; position: relative; z-index: 1; }
+  .hero-stat { padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; backdrop-filter: blur(8px); }
+  .hero-stat .val { font-family: var(--font-mono); font-size: 20px; font-weight: 700; background: var(--grad-logo); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero-stat .lbl { font-size: 11px; color: var(--text-faint); letter-spacing: 0.5px; text-transform: uppercase; margin-top: 4px; font-weight: 600; }
+
+  .hero-foot { position: relative; z-index: 1; display: flex; gap: 18px; font-size: 11px; color: var(--text-faint); }
+  .hero-foot span { display: flex; align-items: center; gap: 6px; }
+  .hero-foot .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+
+  /* floating orbs */
+  .orb { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.4; animation: float 12s ease-in-out infinite; }
+  .orb-1 { width: 300px; height: 300px; background: #2563eb; top: 10%; right: -80px; }
+  .orb-2 { width: 240px; height: 240px; background: #10b981; bottom: 15%; left: 30%; animation-delay: -6s; }
+  @keyframes float { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(20px, -30px); } }
+
+  /* Right side form */
+  .auth-card {
+    background: rgba(10, 22, 40, 0.85);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid var(--border);
+    padding: 50px 48px;
+    display: flex; flex-direction: column; justify-content: center;
+    min-height: 100vh;
+  }
+  .auth-card .tabs { margin-bottom: 30px; }
+  .auth-form { display: none; flex-direction: column; gap: 18px; }
+  .auth-form.active { display: flex; }
+  .auth-form h2 { font-family: var(--font-display); font-size: 22px; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px; }
+  .auth-form .hint { color: var(--text-dim); font-size: 13px; margin-bottom: 10px; }
+
+  .pw-row { position: relative; }
+  .pw-row input { padding-right: 42px; width: 100%; }
+  .pw-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); padding: 6px; color: var(--text-faint); }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .cb-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-dim); }
+  .cb-row input { width: 16px; height: 16px; accent-color: var(--sky); }
+  .cb-row a { color: var(--sky); text-decoration: underline; }
+
+  .submit {
+    padding: 14px; border-radius: 10px;
+    background: var(--grad-logo); color: white;
+    font-weight: 700; font-size: 14px; letter-spacing: 0.5px;
+    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.4);
+    transition: all 0.2s;
+    margin-top: 6px;
+  }
+  .submit:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(37, 99, 235, 0.55); }
+  .submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .divider { display: flex; align-items: center; gap: 12px; color: var(--text-faint); font-size: 11px; margin: 8px 0; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .oauth-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .oauth-btn {
+    padding: 11px; background: var(--bg-1); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text-dim); font-weight: 600; font-size: 12px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: all 0.2s;
+  }
+  .oauth-btn:hover { border-color: var(--border-hi); color: var(--text); }
+
+  .switch-hint { text-align: center; color: var(--text-dim); font-size: 12px; margin-top: 10px; }
+  .switch-hint a { color: var(--sky); font-weight: 600; cursor: pointer; }
+
+  .pw-strength { display: flex; gap: 4px; margin-top: 6px; }
+  .pw-strength div { flex: 1; height: 3px; background: var(--bg-2); border-radius: 2px; transition: background 0.2s; }
+  .pw-strength.s1 div:nth-child(1) { background: var(--red); }
+  .pw-strength.s2 div:nth-child(-n+2) { background: var(--amber); }
+  .pw-strength.s3 div:nth-child(-n+3) { background: var(--sky); }
+  .pw-strength.s4 div { background: var(--green); }
+
+  .err { color: var(--red-hi); font-size: 12px; }
+
+  @media (max-width: 900px) {
+    .auth-wrap { grid-template-columns: 1fr; }
+    .auth-hero { padding: 30px 22px; min-height: auto; }
+    .hero-content h1 { font-size: 32px; }
+    .auth-card { padding: 30px 22px; min-height: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-wrap">
+  <div class="auth-hero">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <a href="index.html" class="hero-brand">
+      <img id="heroLogo" alt="MX1" />
+      <div>
+        <div class="mark">MX1</div>
+        <div class="sub">EXCHANGE</div>
+      </div>
+    </a>
+
+    <div class="hero-content">
+      <h1>Trade crypto at the <span class="grad">speed of light.</span></h1>
+      <p>Spot, futures, copy trading, launchpad — everything you need, backed by MX1 Fusion AI agents and sub-millisecond execution across 200+ markets.</p>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="val">$28.4B</div>
+          <div class="lbl">24h Volume</div>
+        </div>
+        <div class="hero-stat">
+          <div class="val">4.2M+</div>
+          <div class="lbl">Traders</div>
+        </div>
+        <div class="hero-stat">
+          <div class="val">210+</div>
+          <div class="lbl">Markets</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-foot">
+      <span><span class="dot"></span>All systems nominal</span>
+      <span>·</span>
+      <span>SOC 2 Type II</span>
+      <span>·</span>
+      <span>ISO 27001</span>
+    </div>
+  </div>
+
+  <div class="auth-card">
+    <div class="tabs" style="max-width: 320px;">
+      <button id="tabLogin" class="active">Log In</button>
+      <button id="tabSignup">Sign Up</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form id="loginForm" class="auth-form active" novalidate>
+      <h2>Welcome back</h2>
+      <div class="hint">Sign in to your MX1 account.</div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="you@domain.com" required />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="pw-row">
+          <input type="password" id="loginPw" placeholder="••••••••" required />
+          <button type="button" class="pw-toggle" onclick="togglePw('loginPw', this)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="cb-row" style="justify-content: space-between;">
+        <label style="display: flex; align-items: center; gap: 8px;"><input type="checkbox" id="remember" checked /> Keep me signed in</label>
+        <a href="#" onclick="toast('Reset email sent (demo)', 'info'); return false;">Forgot password?</a>
+      </div>
+      <div class="err" id="loginErr" style="display:none;"></div>
+      <button type="submit" class="submit">Log In</button>
+
+      <div class="divider">or continue with</div>
+      <div class="oauth-row">
+        <button type="button" class="oauth-btn" onclick="oauthDemo('Google')">Google</button>
+        <button type="button" class="oauth-btn" onclick="oauthDemo('Apple')">Apple</button>
+        <button type="button" class="oauth-btn" onclick="oauthDemo('Wallet')">Wallet</button>
+      </div>
+      <div class="switch-hint">Don't have an account? <a onclick="switchTab('signup')">Create one</a></div>
+    </form>
+
+    <!-- SIGNUP FORM -->
+    <form id="signupForm" class="auth-form" novalidate>
+      <h2>Create your account</h2>
+      <div class="hint">Takes under a minute. Verify email to start trading.</div>
+      <div class="row2">
+        <div class="field">
+          <label>First name</label>
+          <input type="text" id="firstName" placeholder="Zack" required />
+        </div>
+        <div class="field">
+          <label>Last name</label>
+          <input type="text" id="lastName" placeholder="Tyson" required />
+        </div>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="signupEmail" placeholder="you@domain.com" required />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="pw-row">
+          <input type="password" id="signupPw" placeholder="Min 8 characters" required />
+          <button type="button" class="pw-toggle" onclick="togglePw('signupPw', this)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div id="pwStrength" class="pw-strength"><div></div><div></div><div></div><div></div></div>
+      </div>
+      <div class="field">
+        <label>Referral code <span style="color: var(--text-faint); text-transform: none; font-weight: 400;">(optional)</span></label>
+        <input type="text" id="refCode" placeholder="e.g. MX1-AXJ9" />
+      </div>
+      <div class="cb-row">
+        <input type="checkbox" id="tos" required />
+        <label for="tos">I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</label>
+      </div>
+      <div class="err" id="signupErr" style="display:none;"></div>
+      <button type="submit" class="submit">Create Account</button>
+      <div class="switch-hint">Already have an account? <a onclick="switchTab('login')">Sign in</a></div>
+    </form>
+  </div>
+</div>
+
+<script src="logo.js"></script>
+<script src="shared.js"></script>
+<script>
+  document.getElementById('heroLogo').src = LOGO_DATA_URL;
+
+  // Tab switching
+  function switchTab(tab) {
+    document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+    document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+    document.getElementById('loginForm').classList.toggle('active', tab === 'login');
+    document.getElementById('signupForm').classList.toggle('active', tab === 'signup');
+    document.title = (tab === 'login' ? 'Log In' : 'Sign Up') + ' · MX1 Exchange';
+  }
+  document.getElementById('tabLogin').addEventListener('click', () => switchTab('login'));
+  document.getElementById('tabSignup').addEventListener('click', () => switchTab('signup'));
+
+  // Honor ?tab=signup param
+  const params = new URLSearchParams(location.search);
+  if (params.get('tab') === 'signup') switchTab('signup');
+
+  function togglePw(id, btn) {
+    const el = document.getElementById(id);
+    el.type = el.type === 'password' ? 'text' : 'password';
+  }
+
+  function oauthDemo(provider) {
+    toast(`${provider} sign-in is a demo — logging you in as guest`, 'info');
+    const user = MX1.login('guest@mx1.com', 'Guest Trader');
+    setTimeout(() => location.href = redirectAfterLogin(), 600);
+  }
+
+  function redirectAfterLogin() {
+    const next = new URLSearchParams(location.search).get('next');
+    return next || 'index.html';
+  }
+
+  // Password strength
+  document.getElementById('signupPw').addEventListener('input', e => {
+    const v = e.target.value;
+    let score = 0;
+    if (v.length >= 8) score++;
+    if (/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
+    if (/\d/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    const el = document.getElementById('pwStrength');
+    el.className = 'pw-strength s' + score;
+  });
+
+  // Login submit
+  document.getElementById('loginForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const pw = document.getElementById('loginPw').value;
+    const err = document.getElementById('loginErr');
+    err.style.display = 'none';
+    if (!email.includes('@')) return showErr(err, 'Enter a valid email.');
+    if (pw.length < 6) return showErr(err, 'Password must be at least 6 characters.');
+    // fake auth
+    MX1.login(email);
+    toast('Signed in. Welcome back.', 'success');
+    setTimeout(() => location.href = redirectAfterLogin(), 500);
+  });
+
+  // Signup submit
+  document.getElementById('signupForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const fn = document.getElementById('firstName').value.trim();
+    const ln = document.getElementById('lastName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const pw = document.getElementById('signupPw').value;
+    const tos = document.getElementById('tos').checked;
+    const err = document.getElementById('signupErr');
+    err.style.display = 'none';
+    if (!fn || !ln) return showErr(err, 'Enter your full name.');
+    if (!email.includes('@')) return showErr(err, 'Enter a valid email.');
+    if (pw.length < 8) return showErr(err, 'Password must be at least 8 characters.');
+    if (!tos) return showErr(err, 'You must accept the terms.');
+    const user = MX1.login(email, `${fn} ${ln}`);
+    toast('Account created. Redirecting to KYC...', 'success');
+    setTimeout(() => location.href = 'kyc.html', 700);
+  });
+
+  function showErr(el, msg) {
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  // If already signed in, redirect
+  if (MX1.session && !params.get('force')) {
+    // soft redirect — don't loop
+    // Just surface a hint
+    setTimeout(() => {
+      toast(`Already signed in as ${MX1.session.email}. Redirecting...`, 'info', 1500);
+      setTimeout(() => location.href = redirectAfterLogin(), 1500);
+    }, 300);
+  }
+</script>
+</body>
+</html>

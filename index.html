@@ -127,6 +127,63 @@
 
   @media (max-width: 1200px) { .layout { grid-template-columns: 260px 1fr 300px; } }
   @media (max-width: 960px) { .layout { grid-template-columns: 1fr; height: auto; } .chart-body { height: 420px; } }
+
+  /* ====== NEW: Orderbook / Trades tabs ====== */
+  .ob-tabs { display: flex; gap: 14px; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 12px; background: var(--bg-1); }
+  .ob-tabs button { padding: 4px 0; font-weight: 600; color: var(--text-faint); border-bottom: 2px solid transparent; letter-spacing: 0.3px; }
+  .ob-tabs button.active { color: var(--text); border-bottom-color: var(--sky); }
+  .ob-tabs .agg { margin-left: auto; font-family: var(--font-mono); color: var(--text-dim); font-size: 11px; padding: 3px 8px; background: var(--bg-2); border-radius: 4px; cursor: pointer; border: 1px solid var(--border); }
+  .trades-feed { flex: 1; overflow-y: auto; font-family: var(--font-mono); font-size: 11.5px; }
+  .trade-row { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 3px 12px; align-items: center; }
+  .trade-row:hover { background: rgba(56, 189, 248, 0.05); }
+  .trade-row .px { font-weight: 600; }
+  .trade-row .amt, .trade-row .tm { color: var(--text-dim); text-align: right; }
+  .trade-row.buy .px { color: var(--green-hi); }
+  .trade-row.sell .px { color: var(--red-hi); }
+  .trades-head { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 6px 12px; font-size: 10px; letter-spacing: 0.5px; color: var(--text-faint); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  .trades-head > :nth-child(2), .trades-head > :nth-child(3) { text-align: right; }
+
+  /* ====== NEW: Recently viewed pair pills ====== */
+  .recent-pairs { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--bg-1); align-items: center; overflow-x: auto; scrollbar-width: none; }
+  .recent-pairs::-webkit-scrollbar { display: none; }
+  .recent-pairs .label { font-size: 9.5px; color: var(--text-faint); letter-spacing: 0.6px; text-transform: uppercase; font-weight: 700; flex-shrink: 0; }
+  .recent-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; background: var(--bg-2); border: 1px solid var(--border); font-size: 11px; font-family: var(--font-mono); font-weight: 600; cursor: pointer; flex-shrink: 0; transition: all 0.15s; }
+  .recent-pill:hover { border-color: var(--border-hi); background: rgba(56, 189, 248, 0.06); }
+  .recent-pill .sym-mini { color: var(--text); }
+  .recent-pill .px-mini { color: var(--text-dim); }
+  .recent-pill.swap { background: none; border: none; padding: 4px 6px; color: var(--text-faint); }
+  .recent-pill.swap:hover { color: var(--sky); }
+
+  /* ====== NEW: Chart drawing tools rail ====== */
+  .chart-body { display: flex; }
+  .chart-rail { width: 34px; flex-shrink: 0; display: flex; flex-direction: column; gap: 3px; padding: 6px 4px; border-right: 1px solid var(--border); background: var(--bg-1); }
+  .rail-btn { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 5px; color: var(--text-faint); transition: all 0.15s; cursor: pointer; }
+  .rail-btn:hover { background: rgba(56, 189, 248, 0.1); color: var(--sky); }
+  .rail-btn.active { background: rgba(56, 189, 248, 0.15); color: var(--sky); }
+  .rail-sep { height: 1px; background: var(--border); margin: 3px 2px; }
+  .chart-svg-wrap { flex: 1; position: relative; min-width: 0; }
+  .chart-svg-wrap svg { width: 100%; height: 100%; display: block; }
+
+  /* ====== NEW: By Qty / By Value toggle ====== */
+  .by-toggle { display: flex; gap: 2px; padding: 3px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 6px; }
+  .by-toggle button { flex: 1; padding: 5px 8px; font-size: 10.5px; font-weight: 600; color: var(--text-faint); border-radius: 4px; letter-spacing: 0.3px; }
+  .by-toggle button.active { color: var(--text); background: var(--bg-3); }
+
+  /* ====== NEW: TP/SL checkboxes ====== */
+  .tpsl-block { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-top: 1px dashed var(--border); border-bottom: 1px dashed var(--border); margin: 4px 0; }
+  .tpsl-row { display: flex; align-items: center; gap: 8px; }
+  .tpsl-check { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-dim); cursor: pointer; font-weight: 600; min-width: 68px; }
+  .tpsl-check input { accent-color: var(--sky); width: 13px; height: 13px; }
+  .tpsl-inputs { display: flex; flex: 1; gap: 6px; opacity: 0.4; pointer-events: none; transition: opacity 0.15s; }
+  .tpsl-inputs.on { opacity: 1; pointer-events: auto; }
+  .tpsl-inputs input { flex: 1; padding: 6px 8px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-family: var(--font-mono); font-size: 11.5px; outline: none; text-align: right; min-width: 0; }
+  .tpsl-inputs input:focus { border-color: var(--border-hi); }
+  .tpsl-inputs select { padding: 6px 4px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 5px; color: var(--text-dim); font-size: 10px; font-weight: 600; outline: none; }
+  .tpsl-pnl { font-size: 10px; color: var(--text-faint); font-family: var(--font-mono); flex-shrink: 0; min-width: 42px; text-align: right; }
+
+  /* ====== NEW: Funding rate in pair stats ====== */
+  .funding-stat { position: relative; }
+  .funding-stat .timer { font-family: var(--font-mono); color: var(--sky); font-size: 10px; }
 </style>
 </head>
 <body>
@@ -158,17 +215,24 @@
     </div>
 
     <div class="panel orderbook">
-      <div class="panel-header">
-        <span>Order Book</span>
-        <span style="font-family: var(--font-mono); color: var(--text-dim); text-transform: none; letter-spacing: 0;">0.01</span>
+      <div class="ob-tabs">
+        <button class="active" id="obTabBook">Orderbook</button>
+        <button id="obTabTrades">Trades</button>
+        <span class="agg" onclick="toast('Aggregation: 0.01', 'info')">0.01 ▾</span>
       </div>
-      <div class="ob-head"><span>Price</span><span>Amount</span><span>Total</span></div>
-      <div class="ob-side" id="asks"></div>
-      <div class="ob-spread">
-        <div><span class="last up" id="obLast"><span class="arrow">▲</span>88,508.76</span></div>
-        <span class="mono" style="font-size: 11px; color: var(--text-faint);">Spread: 0.010%</span>
+      <div id="obView">
+        <div class="ob-head"><span>Price</span><span>Amount</span><span>Total</span></div>
+        <div class="ob-side" id="asks"></div>
+        <div class="ob-spread">
+          <div><span class="last up" id="obLast"><span class="arrow">▲</span>88,508.76</span></div>
+          <span class="mono" style="font-size: 11px; color: var(--text-faint);">Spread: 0.010%</span>
+        </div>
+        <div class="ob-side" id="bids"></div>
       </div>
-      <div class="ob-side" id="bids"></div>
+      <div id="tradesView" style="display:none; flex-direction:column; flex:1; min-height:0;">
+        <div class="trades-head"><span>Price</span><span>Amount</span><span>Time</span></div>
+        <div class="trades-feed" id="tradesFeed"></div>
+      </div>
     </div>
   </div>
 
@@ -181,6 +245,12 @@
       </div>
       <div class="pair-price-main" id="mainPrice">88,508.76</div>
       <div class="pair-stats" id="pairStats"></div>
+    </div>
+
+    <div class="panel" style="flex: 0 0 auto;">
+      <div class="recent-pairs" id="recentPairs">
+        <span class="label">RECENT</span>
+      </div>
     </div>
 
     <div class="panel chart-panel">
@@ -196,14 +266,49 @@
         <button class="tf-btn">Indicators</button>
         <button class="tf-btn">Candle</button>
         <span class="spacer"></span>
-        <button class="tf-btn">⚙</button>
+        <button class="tf-btn" title="Alerts">🔔</button>
+        <button class="tf-btn" title="Fullscreen">⛶</button>
+        <button class="tf-btn" title="Settings">⚙</button>
       </div>
       <div class="chart-body">
-        <div class="chart-info">
-          <span class="pair" id="chartPair">BTC/USDT · 15 · MX1</span>
-          <span class="ohlc" id="chartOHLC"></span>
+        <div class="chart-rail">
+          <button class="rail-btn active" title="Crosshair" onclick="setTool(this,'cross')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4M6 12H2M12 6V2M12 22v-4"/><circle cx="12" cy="12" r="1"/></svg>
+          </button>
+          <button class="rail-btn" title="Trend line" onclick="setTool(this,'trend')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20 20 4"/><circle cx="4" cy="20" r="2"/><circle cx="20" cy="4" r="2"/></svg>
+          </button>
+          <button class="rail-btn" title="Horizontal line" onclick="setTool(this,'hline')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18"/></svg>
+          </button>
+          <button class="rail-btn" title="Fibonacci retracement" onclick="setTool(this,'fib')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 5h18M3 9h18M3 13h18M3 17h18M3 21h18"/></svg>
+          </button>
+          <button class="rail-btn" title="Rectangle" onclick="setTool(this,'rect')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="1"/></svg>
+          </button>
+          <div class="rail-sep"></div>
+          <button class="rail-btn" title="Measure" onclick="setTool(this,'measure')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 21 21 3M6 18l2-2M9 15l3-3M14 10l3-3M18 6l2-2"/></svg>
+          </button>
+          <button class="rail-btn" title="Text" onclick="setTool(this,'text')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+          </button>
+          <button class="rail-btn" title="Magnet mode" onclick="setTool(this,'magnet')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 15a6 6 0 1 0 12 0V6h-4v9a2 2 0 1 1-4 0V6H6z"/></svg>
+          </button>
+          <div class="rail-sep"></div>
+          <button class="rail-btn" title="Clear drawings" onclick="toast('Drawings cleared','info')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+          </button>
         </div>
-        <svg id="chart" viewBox="0 0 1000 460" preserveAspectRatio="none"></svg>
+        <div class="chart-svg-wrap">
+          <div class="chart-info">
+            <span class="pair" id="chartPair">BTC/USDT · 15 · MX1</span>
+            <span class="ohlc" id="chartOHLC"></span>
+          </div>
+          <svg id="chart" viewBox="0 0 1000 460" preserveAspectRatio="none"></svg>
+        </div>
       </div>
     </div>
 
@@ -248,6 +353,13 @@
         <input type="text" id="amountInput" value="0.0250" />
         <span class="suffix" id="amountSuffix">BTC</span>
       </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; align-items:center;">
+        <div class="by-toggle">
+          <button class="active" data-by="qty">By Qty</button>
+          <button data-by="value">By Value</button>
+        </div>
+        <div style="font-size:10px; color:var(--text-faint); text-align:right; font-family:var(--font-mono);">≈ $<span id="byValueHint">2,212.72</span></div>
+      </div>
       <div class="pct-row">
         <button data-pct="25">25%</button>
         <button data-pct="50">50%</button>
@@ -259,6 +371,26 @@
         <input type="text" id="totalInput" value="2,212.72" readonly />
         <span class="suffix">USDT</span>
       </div>
+
+      <div class="tpsl-block">
+        <div class="tpsl-row">
+          <label class="tpsl-check"><input type="checkbox" id="tpCheck" /> TP</label>
+          <div class="tpsl-inputs" id="tpInputs">
+            <input type="text" id="tpPrice" placeholder="Trigger price" />
+            <select><option>Last</option><option>Mark</option><option>Index</option></select>
+          </div>
+          <span class="tpsl-pnl" id="tpPnl">+0.00%</span>
+        </div>
+        <div class="tpsl-row">
+          <label class="tpsl-check"><input type="checkbox" id="slCheck" /> SL</label>
+          <div class="tpsl-inputs" id="slInputs">
+            <input type="text" id="slPrice" placeholder="Stop price" />
+            <select><option>Last</option><option>Mark</option><option>Index</option></select>
+          </div>
+          <span class="tpsl-pnl" id="slPnl">-0.00%</span>
+        </div>
+      </div>
+
       <div class="info-grid">
         <span class="k">Available</span><span class="v" id="availVal">30,452.00 USDT</span>
         <span class="k">Max Size</span><span class="v" id="maxSize">6.877 BTC</span>
@@ -345,13 +477,21 @@
       ? '0 0 18px rgba(52, 211, 153, 0.3)' : '0 0 18px rgba(248, 113, 113, 0.3)';
 
     const statsEl = document.getElementById('pairStats');
+    // Seeded funding rate per symbol (stable)
+    let fseed = 0; for (const c of m.s) fseed += c.charCodeAt(0);
+    const fundingRate = ((fseed % 50 - 25) / 10000); // -0.0025 to +0.0025
     statsEl.innerHTML = `
       <div class="pair-stat"><span class="label">24h Change</span><span class="value ${m.c >= 0 ? 'up' : 'down'}">${m.c >= 0 ? '+' : ''}${m.c.toFixed(2)}%</span></div>
       <div class="pair-stat"><span class="label">Mark Price</span><span class="value">${fmtPrice(m.p + 3.64)}</span></div>
       <div class="pair-stat"><span class="label">Index</span><span class="value">${fmtPrice(m.p - 4.54)}</span></div>
       <div class="pair-stat"><span class="label">24h High</span><span class="value">${fmtPrice(m.hi)}</span></div>
       <div class="pair-stat"><span class="label">24h Low</span><span class="value">${fmtPrice(m.lo)}</span></div>
-      <div class="pair-stat"><span class="label">24h Volume</span><span class="value">${fmtVol(m.vol)}</span></div>
+      <div class="pair-stat"><span class="label">24h Vol (${m.s})</span><span class="value">${fmtVol(m.vol / m.p)}</span></div>
+      <div class="pair-stat"><span class="label">24h Vol (USDT)</span><span class="value">${fmtVol(m.vol)}</span></div>
+      <div class="pair-stat funding-stat">
+        <span class="label">Funding / Countdown</span>
+        <span class="value ${fundingRate >= 0 ? 'up' : 'down'}">${(fundingRate * 100).toFixed(4)}% <span class="timer" id="fundingTimer">00:00:00</span></span>
+      </div>
     `;
 
     document.getElementById('chartPair').textContent = `${m.s}/${m.q} · 15 · MX1`;
@@ -362,8 +502,11 @@
     renderPairList();
     renderChart(m);
     renderOrderBook(m);
+    renderTrades(m);
+    addToRecent(m.s);
+    renderRecentPairs();
     updateSubmitBtn();
-    history.replaceState(null, '', `?pair=${sym}`);
+    window.history.replaceState(null, '', `?pair=${sym}`);
   };
 
   // ---------- Chart (candlestick SVG) ----------
@@ -497,6 +640,81 @@
     lastEl.innerHTML = `<span class="arrow">${market.c >= 0 ? '▲' : '▼'}</span>${fmtPrice(market.p)}`;
   }
 
+  // ---------- Trades feed ----------
+  function renderTrades(market) {
+    const feed = document.getElementById('tradesFeed');
+    const rows = [];
+    const now = Date.now();
+    for (let i = 0; i < 40; i++) {
+      const isBuy = Math.random() > 0.48;
+      const flicker = (Math.random() - 0.5) * market.p * 0.0008;
+      const px = market.p + flicker;
+      const amt = (0.0005 + Math.random() * 0.8).toFixed(market.p > 1000 ? 4 : 2);
+      const age = i * (1 + Math.random() * 3);
+      const t = new Date(now - age * 1000);
+      const tm = `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}:${String(t.getSeconds()).padStart(2,'0')}`;
+      rows.push(`<div class="trade-row ${isBuy?'buy':'sell'}"><span class="px">${fmtPrice(px)}</span><span class="amt">${amt}</span><span class="tm">${tm}</span></div>`);
+    }
+    feed.innerHTML = rows.join('');
+  }
+  // Orderbook / Trades tab switching
+  document.getElementById('obTabBook').addEventListener('click', () => {
+    document.getElementById('obTabBook').classList.add('active');
+    document.getElementById('obTabTrades').classList.remove('active');
+    document.getElementById('obView').style.display = '';
+    document.getElementById('tradesView').style.display = 'none';
+  });
+  document.getElementById('obTabTrades').addEventListener('click', () => {
+    document.getElementById('obTabTrades').classList.add('active');
+    document.getElementById('obTabBook').classList.remove('active');
+    document.getElementById('obView').style.display = 'none';
+    document.getElementById('tradesView').style.display = 'flex';
+  });
+
+  // ---------- Recent pairs ----------
+  let recentPairs = JSON.parse(localStorage.getItem('mx1_recent_pairs') || '["BTC","ETH","SOL"]');
+  function addToRecent(sym) {
+    recentPairs = [sym, ...recentPairs.filter(s => s !== sym)].slice(0, 6);
+    localStorage.setItem('mx1_recent_pairs', JSON.stringify(recentPairs));
+  }
+  function renderRecentPairs() {
+    const el = document.getElementById('recentPairs');
+    const pills = recentPairs.map(s => {
+      const mk = MARKETS.find(x => x.s === s);
+      if (!mk) return '';
+      return `<div class="recent-pill ${s === selectedPair ? 'selected' : ''}" onclick="selectPair('${s}')">
+        <span class="sym-mini">${mk.s}</span>
+        <span class="px-mini ${mk.c >= 0 ? 'up' : 'down'}">${fmtPrice(mk.p)}</span>
+      </div>`;
+    }).join('');
+    el.innerHTML = `<span class="label">RECENT</span>${pills}
+      <button class="recent-pill swap" title="Swap pairs" onclick="toast('Paired view not yet available', 'info')">⇄</button>`;
+  }
+
+  // ---------- Chart drawing tool selector ----------
+  window.setTool = function(btn, name) {
+    document.querySelectorAll('.chart-rail .rail-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (name !== 'cross') toast(`${name[0].toUpperCase() + name.slice(1)} tool selected (drag on chart to draw)`, 'info', 1500);
+  };
+
+  // ---------- Funding countdown (every 8 hours, UTC) ----------
+  setInterval(() => {
+    const timerEl = document.getElementById('fundingTimer');
+    if (!timerEl) return;
+    const now = new Date();
+    const utcH = now.getUTCHours();
+    const utcM = now.getUTCMinutes();
+    const utcS = now.getUTCSeconds();
+    // Next funding at 00, 08, 16 UTC
+    const nextH = Math.ceil((utcH + utcM / 60 + utcS / 3600 + 0.001) / 8) * 8;
+    const totalSecsLeft = (nextH * 3600) - (utcH * 3600 + utcM * 60 + utcS);
+    const h = Math.floor(totalSecsLeft / 3600);
+    const m = Math.floor((totalSecsLeft % 3600) / 60);
+    const s = totalSecsLeft % 60;
+    timerEl.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }, 1000);
+
   // ---------- Trade form ----------
   const priceInput = document.getElementById('priceInput');
   const amountInput = document.getElementById('amountInput');
@@ -505,10 +723,68 @@
   function updateTotal() {
     const p = parseNum(priceInput.value);
     const a = parseNum(amountInput.value);
-    totalInput.value = (p * a).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const t = p * a;
+    totalInput.value = t.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const hintEl = document.getElementById('byValueHint');
+    if (hintEl) hintEl.textContent = t.toLocaleString(undefined, {maximumFractionDigits: 2});
+    updateTpSlPnl();
   }
   priceInput.addEventListener('input', updateTotal);
   amountInput.addEventListener('input', updateTotal);
+
+  // ---------- By Qty / By Value toggle ----------
+  let byMode = 'qty';
+  document.querySelectorAll('.by-toggle button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.by-toggle button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      byMode = b.dataset.by;
+      const m = MARKETS.find(x => x.s === selectedPair);
+      if (byMode === 'value') {
+        document.querySelector('.input-row .lbl').parentElement.querySelector('.suffix').textContent = m.s;
+        amountInput.placeholder = 'Order value in USDT';
+      }
+      toast(`Sizing by ${byMode === 'qty' ? 'quantity' : 'notional value'}`, 'info', 1500);
+    });
+  });
+
+  // ---------- TP / SL ----------
+  function updateTpSlPnl() {
+    const entry = parseNum(priceInput.value) || 0;
+    const tpP = parseNum(document.getElementById('tpPrice')?.value);
+    const slP = parseNum(document.getElementById('slPrice')?.value);
+    const tpPnlEl = document.getElementById('tpPnl');
+    const slPnlEl = document.getElementById('slPnl');
+    if (!entry) return;
+    if (tpPnlEl) {
+      if (tpP > 0) {
+        const pct = ((tpP / entry - 1) * 100) * (side === 'long' ? 1 : -1) * leverage;
+        tpPnlEl.textContent = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+        tpPnlEl.style.color = pct >= 0 ? 'var(--green-hi)' : 'var(--red-hi)';
+      } else {
+        tpPnlEl.textContent = '+0.00%';
+        tpPnlEl.style.color = 'var(--text-faint)';
+      }
+    }
+    if (slPnlEl) {
+      if (slP > 0) {
+        const pct = ((slP / entry - 1) * 100) * (side === 'long' ? 1 : -1) * leverage;
+        slPnlEl.textContent = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+        slPnlEl.style.color = pct >= 0 ? 'var(--green-hi)' : 'var(--red-hi)';
+      } else {
+        slPnlEl.textContent = '-0.00%';
+        slPnlEl.style.color = 'var(--text-faint)';
+      }
+    }
+  }
+  document.getElementById('tpCheck').addEventListener('change', e => {
+    document.getElementById('tpInputs').classList.toggle('on', e.target.checked);
+  });
+  document.getElementById('slCheck').addEventListener('change', e => {
+    document.getElementById('slInputs').classList.toggle('on', e.target.checked);
+  });
+  document.getElementById('tpPrice').addEventListener('input', updateTpSlPnl);
+  document.getElementById('slPrice').addEventListener('input', updateTpSlPnl);
 
   document.querySelectorAll('.pct-row button').forEach(b => {
     b.addEventListener('click', () => {
@@ -579,6 +855,11 @@
     const amt = parseNum(amountInput.value);
     if (!px || !amt) { toast('Enter a price and amount.', 'error'); return; }
 
+    const tpOn = document.getElementById('tpCheck').checked;
+    const slOn = document.getElementById('slCheck').checked;
+    const tpPx = tpOn ? parseNum(document.getElementById('tpPrice').value) : null;
+    const slPx = slOn ? parseNum(document.getElementById('slPrice').value) : null;
+
     const pos = {
       id: 'p_' + Date.now(),
       pair: `${m.s}/${m.q}`,
@@ -587,6 +868,8 @@
       entryPrice: px,
       amount: amt,
       leverage,
+      tp: tpPx,
+      sl: slPx,
       timestamp: Date.now(),
       pnl: 0,
       liqPrice: side === 'long' ? px * (1 - 0.95 / leverage) : px * (1 + 0.95 / leverage),
@@ -595,7 +878,10 @@
     savePositions();
     history.unshift({ ...pos, action: 'OPEN', status: 'FILLED' });
     saveHistory();
-    toast(`${side === 'long' ? 'Long' : 'Short'} ${amt} ${m.s} @ ${fmtPrice(px)} — filled`, 'success');
+    let extra = '';
+    if (tpPx) extra += ` · TP ${fmtPrice(tpPx)}`;
+    if (slPx) extra += ` · SL ${fmtPrice(slPx)}`;
+    toast(`${side === 'long' ? 'Long' : 'Short'} ${amt} ${m.s} @ ${fmtPrice(px)} — filled${extra}`, 'success', 4000);
     renderPositions();
   });
 

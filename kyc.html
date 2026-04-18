@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Account · MX1 Exchange</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .acc-layout {
+    display: grid; grid-template-columns: 260px 1fr; gap: 22px;
+  }
+  @media (max-width: 900px) { .acc-layout { grid-template-columns: 1fr; } }
+
+  .acc-sidebar {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 8px; display: flex; flex-direction: column; gap: 2px;
+    height: fit-content; position: sticky; top: 82px;
+  }
+  .acc-sidebar button {
+    text-align: left; padding: 11px 14px; border-radius: 8px; font-size: 13px;
+    color: var(--text-dim); font-weight: 500; display: flex; align-items: center; gap: 10px;
+    transition: all 0.15s;
+  }
+  .acc-sidebar button:hover { color: var(--text); background: rgba(56, 189, 248, 0.05); }
+  .acc-sidebar button.active { color: var(--sky); background: rgba(56, 189, 248, 0.12); font-weight: 600; }
+  .acc-sidebar button svg { flex-shrink: 0; }
+
+  .acc-content .section { display: none; }
+  .acc-content .section.active { display: block; }
+  .acc-content h2 { font-family: var(--font-display); font-size: 20px; letter-spacing: 1px; margin-bottom: 6px; }
+  .acc-content h2 + .desc { color: var(--text-dim); font-size: 13px; margin-bottom: 20px; line-height: 1.5; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 22px; margin-bottom: 14px;
+  }
+  .card h3 { font-family: var(--font-display); font-size: 14px; letter-spacing: 0.8px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .card .desc { color: var(--text-dim); font-size: 12px; margin-bottom: 16px; line-height: 1.5; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 700px) { .row2 { grid-template-columns: 1fr; } }
+
+  /* KYC tiers */
+  .kyc-tier {
+    display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center;
+    padding: 18px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 12px; transition: all 0.2s;
+  }
+  .kyc-tier.active { border-color: rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.05); }
+  .kyc-tier .badge {
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 800; font-size: 16px;
+    background: var(--bg-1); border: 2px solid var(--border-hi); color: var(--text-dim);
+  }
+  .kyc-tier.active .badge { background: linear-gradient(135deg, var(--green), var(--emerald)); border-color: var(--green); color: white; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+  .kyc-tier .info h4 { font-family: var(--font-display); font-size: 14px; letter-spacing: 0.5px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .kyc-tier .info p { color: var(--text-dim); font-size: 12px; line-height: 1.5; margin-bottom: 6px; }
+  .kyc-tier .limits { font-size: 11px; color: var(--text-faint); display: flex; gap: 14px; flex-wrap: wrap; }
+  .kyc-tier .limits span strong { color: var(--text); font-family: var(--font-mono); font-weight: 600; }
+  .kyc-tier .cta button { padding: 9px 16px; }
+
+  .dropzone {
+    border: 2px dashed var(--border-hi); border-radius: 12px;
+    padding: 40px 20px; text-align: center; background: var(--bg-2);
+    transition: all 0.2s; cursor: pointer;
+  }
+  .dropzone:hover { border-color: var(--sky); background: rgba(56, 189, 248, 0.04); }
+  .dropzone.dragover { border-color: var(--green); background: rgba(16, 185, 129, 0.08); }
+  .dropzone .icon { width: 48px; height: 48px; border-radius: 50%; background: rgba(56, 189, 248, 0.1); display: flex; align-items: center; justify-content: center; color: var(--sky); margin: 0 auto 12px; }
+  .dropzone .title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .dropzone .sub { color: var(--text-faint); font-size: 12px; }
+
+  .switch { position: relative; width: 44px; height: 24px; background: var(--bg-2); border-radius: 999px; cursor: pointer; transition: background 0.2s; border: 1px solid var(--border); flex-shrink: 0; }
+  .switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--text-dim); transition: transform 0.2s, background 0.2s; }
+  .switch.on { background: var(--grad-logo); border-color: transparent; }
+  .switch.on::after { transform: translateX(20px); background: white; }
+
+  .pref-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .pref-row:last-child { border-bottom: none; }
+  .pref-row .info { flex: 1; padding-right: 20px; }
+  .pref-row .label { font-weight: 600; font-size: 13px; }
+  .pref-row .desc { color: var(--text-faint); font-size: 12px; margin-top: 3px; }
+
+  .device-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .device-row:last-child { border-bottom: none; }
+  .device-row .meta { flex: 1; }
+  .device-row .meta .top { display: flex; gap: 8px; align-items: center; font-weight: 600; font-size: 13px; }
+  .device-row .meta .sub { font-size: 11px; color: var(--text-faint); margin-top: 3px; font-family: var(--font-mono); }
+
+  .api-row { padding: 14px; background: var(--bg-2); border-radius: 8px; margin-bottom: 8px; }
+  .api-row .head { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .api-row .name { font-weight: 600; }
+  .api-row .key { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+
+  .avatar-big { width: 80px; height: 80px; border-radius: 50%; background: var(--grad-logo); display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 26px; font-family: var(--font-display); }
+</style>
+</head>
+<body>
+
+<script src="logo.js"></script>
+<script src="shared.js"></script>
+<script>
+  if (!initPage({ active: '', requireAuth: true })) { /* redirected */ }
+</script>
+
+<main class="page">
+  <div class="page-head">
+    <div>
+      <h1>Account Settings</h1>
+      <div class="sub">Manage your profile, security, verification status, and trading preferences.</div>
+    </div>
+  </div>
+
+  <div class="acc-layout">
+    <aside class="acc-sidebar">
+      <button class="active" data-section="profile">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+        Profile
+      </button>
+      <button data-section="security">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg>
+        Security
+      </button>
+      <button data-section="kyc">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 12l2 2 4-4"/><path d="M12 2 4 6v6c0 5 8 10 8 10s8-5 8-10V6l-8-4z"/></svg>
+        KYC Verification
+      </button>
+      <button data-section="notifications">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        Notifications
+      </button>
+      <button data-section="preferences">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.38.2.63.55.71.95.08.4.01.82-.21 1.16z"/></svg>
+        Preferences
+      </button>
+      <button data-section="api">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3M9 17H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3M8 12h8"/></svg>
+        API Keys
+      </button>
+      <button data-section="referrals">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m20 12-8-8-8 8M12 4v16"/></svg>
+        Referrals
+      </button>
+    </aside>
+
+    <div class="acc-content">
+      <!-- PROFILE -->
+      <div class="section active" id="sec-profile">
+        <h2>Profile</h2>
+        <div class="desc">Your account details. Some information is locked once KYC is verified for security.</div>
+
+        <div class="card">
+          <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
+            <div class="avatar-big" id="profAvatar"></div>
+            <div style="flex: 1;">
+              <h3 id="profName" style="font-family: var(--font-display); font-size: 18px; letter-spacing: 0.5px; margin-bottom: 4px;"></h3>
+              <div id="profEmail" style="color: var(--text-dim); font-size: 13px; margin-bottom: 4px;"></div>
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-faint);">UID: <span id="profUid"></span></div>
+            </div>
+            <button class="btn-ghost" onclick="toast('Avatar upload opened (demo)', 'info')">Change Avatar</button>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Display Name</label><input type="text" id="dispName" /></div>
+            <div class="field"><label>Email</label><input type="email" id="dispEmail" disabled /></div>
+            <div class="field"><label>Phone</label><input type="tel" placeholder="+1 (555) 000-0000" /></div>
+            <div class="field"><label>Country</label>
+              <select><option>United States</option><option>United Kingdom</option><option>Canada</option><option>Germany</option><option>Japan</option></select>
+            </div>
+            <div class="field"><label>Timezone</label>
+              <select><option>America/New_York</option><option>UTC</option><option>Europe/London</option><option>Asia/Tokyo</option></select>
+            </div>
+            <div class="field"><label>Language</label>
+              <select><option>English</option><option>Español</option><option>Français</option><option>Deutsch</option><option>日本語</option><option>中文</option></select>
+            </div>
+          </div>
+          <div style="margin-top: 16px; display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn-ghost">Cancel</button>
+            <button class="btn-primary" onclick="toast('Profile updated.', 'success')">Save Changes</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECURITY -->
+      <div class="section" id="sec-security">
+        <h2>Security</h2>
+        <div class="desc">Protect your account. We strongly recommend enabling 2FA and a strong password.</div>
+
+        <div class="card">
+          <h3>🔐 Two-Factor Authentication</h3>
+          <div class="desc">Required for withdrawals and API actions. Use Google Authenticator, Authy, or 1Password.</div>
+          <div class="pref-row" style="border-bottom: none; padding-top: 0;">
+            <div class="info">
+              <div class="label">Authenticator App (TOTP)</div>
+              <div class="desc">Time-based codes from an authenticator app.</div>
+            </div>
+            <span class="chip green">ENABLED</span>
+          </div>
+          <div class="pref-row">
+            <div class="info">
+              <div class="label">SMS 2FA</div>
+              <div class="desc">Codes sent to +1 *** *** 4829. (Less secure than TOTP.)</div>
+            </div>
+            <div class="switch on" onclick="this.classList.toggle('on');toast('SMS 2FA toggled.', 'success')"></div>
+          </div>
+          <div class="pref-row">
+            <div class="info">
+              <div class="label">Passkey / Hardware Key</div>
+              <div class="desc">FIDO2 security key or platform passkey.</div>
+            </div>
+            <button class="btn-ghost" onclick="toast('Passkey enrollment started (demo)', 'info')">Add Passkey</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🔑 Password</h3>
+          <div class="desc">Last changed 42 days ago. We recommend rotating every 90 days.</div>
+          <div class="row2">
+            <div class="field"><label>Current Password</label><input type="password" /></div>
+            <div class="field"><label>New Password</label><input type="password" /></div>
+          </div>
+          <div style="margin-top: 14px;">
+            <button class="btn-primary" onclick="toast('Password changed.', 'success')">Change Password</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>📱 Active Sessions</h3>
+          <div class="desc">Devices currently signed in to your account. Revoke any that aren't yours.</div>
+          <div class="device-row">
+            <div class="meta">
+              <div class="top">MacBook Pro · Chrome 138 <span class="chip green" style="font-size: 9px; padding: 2px 6px;">THIS DEVICE</span></div>
+              <div class="sub">Island Walk, FL · Active now</div>
+            </div>
+            <button style="color: var(--text-faint); font-size: 12px;" disabled>Current</button>
+          </div>
+          <div class="device-row">
+            <div class="meta">
+              <div class="top">iPhone 17 Pro · iOS App</div>
+              <div class="sub">Island Walk, FL · 2 hours ago</div>
+            </div>
+            <button class="btn-ghost" style="padding: 6px 12px; font-size: 11px;" onclick="toast('Session revoked.', 'success'); this.closest('.device-row').remove();">Revoke</button>
+          </div>
+          <div class="device-row">
+            <div class="meta">
+              <div class="top">Windows PC · Firefox 130</div>
+              <div class="sub">Miami, FL · Yesterday</div>
+            </div>
+            <button class="btn-ghost" style="padding: 6px 12px; font-size: 11px;" onclick="toast('Session revoked.', 'success'); this.closest('.device-row').remove();">Revoke</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>💰 Withdrawal Whitelist</h3>
+          <div class="desc">When enabled, withdrawals can only be sent to pre-approved addresses. 24h cooldown on new entries.</div>
+          <div class="pref-row" style="border-bottom: none; padding: 0;">
+            <div class="info"><div class="label">Whitelist-only withdrawals</div></div>
+            <div class="switch" onclick="this.classList.toggle('on');toast('Whitelist mode ' + (this.classList.contains('on') ? 'enabled' : 'disabled'), 'success')"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KYC -->
+      <div class="section" id="sec-kyc">
+        <h2>KYC Verification</h2>
+        <div class="desc">Higher verification tiers unlock higher trading limits, faster withdrawals, and launchpad priority.</div>
+
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 16px; align-items: center;">
+            <h3 style="margin-bottom: 0;">Your Current Status</h3>
+            <span class="chip amber" id="kycChip">LEVEL 1 · BASIC</span>
+          </div>
+
+          <div class="kyc-tier active">
+            <div class="badge">L1</div>
+            <div class="info">
+              <h4>Level 1 · Email Verified <span class="chip green" style="font-size: 10px;">✓ COMPLETE</span></h4>
+              <p>Basic access. Deposit crypto, trade spot, join copy-trading.</p>
+              <div class="limits">
+                <span>Daily withdrawal: <strong>$5,000</strong></span>
+                <span>Monthly: <strong>$50,000</strong></span>
+              </div>
+            </div>
+            <div class="cta"></div>
+          </div>
+
+          <div class="kyc-tier" id="tier2">
+            <div class="badge">L2</div>
+            <div class="info">
+              <h4>Level 2 · ID Verified</h4>
+              <p>Upload a government-issued ID + selfie liveness check. Unlocks fiat on-ramp and higher leverage.</p>
+              <div class="limits">
+                <span>Daily withdrawal: <strong>$100,000</strong></span>
+                <span>Monthly: <strong>$2M</strong></span>
+                <span>Max leverage: <strong>75x</strong></span>
+              </div>
+            </div>
+            <div class="cta">
+              <button class="btn-primary" onclick="openKycUpload(2)">Verify Now</button>
+            </div>
+          </div>
+
+          <div class="kyc-tier">
+            <div class="badge">L3</div>
+            <div class="info">
+              <h4>Level 3 · Address Verified</h4>
+              <p>Proof of address (utility bill or bank statement ≤ 3 months). Unlocks OTC desk, institutional limits, and launchpad VIP.</p>
+              <div class="limits">
+                <span>Daily withdrawal: <strong>Unlimited</strong></span>
+                <span>Max leverage: <strong>125x</strong></span>
+                <span>VIP launchpad access</span>
+              </div>
+            </div>
+            <div class="cta">
+              <button class="btn-ghost" disabled style="opacity: 0.5;">Requires L2</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="section" id="sec-notifications">
+        <h2>Notifications</h2>
+        <div class="desc">Control which alerts you receive across email, push, and in-app.</div>
+
+        <div class="card">
+          <h3>Trading</h3>
+          <div class="pref-row">
+            <div class="info"><div class="label">Order filled</div></div>
+            <div class="switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Position opened / closed</div></div>
+            <div class="switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Liquidation warning</div></div>
+            <div class="switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Stop-loss / Take-profit hit</div></div>
+            <div class="switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Copy-trade signal</div></div>
+            <div class="switch" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Account &amp; Security</h3>
+          <div class="pref-row">
+            <div class="info"><div class="label">New device login</div></div>
+            <div class="switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Withdrawal request</div></div>
+            <div class="switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Password changed</div></div>
+            <div class="switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Suspicious activity</div></div>
+            <div class="switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Marketing &amp; product updates</div></div>
+            <div class="switch" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Delivery Channels</h3>
+          <div class="pref-row">
+            <div class="info"><div class="label">Email</div><div class="desc" id="emailShown"></div></div>
+            <div class="switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Push (Mobile App)</div><div class="desc">Requires MX1 app installed.</div></div>
+            <div class="switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">SMS</div><div class="desc">+1 *** *** 4829 · Security alerts only</div></div>
+            <div class="switch" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Telegram Bot</div><div class="desc">Instant trade alerts via @MX1AlertBot</div></div>
+            <button class="btn-ghost" onclick="toast('Telegram linked.', 'success')">Connect</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PREFERENCES -->
+      <div class="section" id="sec-preferences">
+        <h2>Preferences</h2>
+        <div class="desc">Customize the MX1 interface to match your trading style.</div>
+
+        <div class="card">
+          <h3>Display</h3>
+          <div class="pref-row">
+            <div class="info"><div class="label">Theme</div><div class="desc">Dark · Electric blue/green accents (MX1 default)</div></div>
+            <select><option>Dark (Default)</option><option>Darker</option><option>Midnight Blue</option></select>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Default quote currency</div><div class="desc">Shown alongside base asset on all price displays.</div></div>
+            <select><option>USDT</option><option>USD</option><option>USDC</option><option>BTC</option></select>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Compact layout</div><div class="desc">Denser tables on trade page.</div></div>
+            <div class="switch" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Show PnL in USD</div><div class="desc">Otherwise PnL shows in the position's quote currency.</div></div>
+            <div class="switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Trading Defaults</h3>
+          <div class="pref-row">
+            <div class="info"><div class="label">Default leverage</div><div class="desc">Applied to new positions unless changed.</div></div>
+            <select><option>5x</option><option>10x</option><option selected>20x</option><option>50x</option><option>100x</option></select>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Default margin mode</div><div class="desc">Cross uses all margin; Isolated is per-position.</div></div>
+            <select><option>Isolated</option><option selected>Cross</option></select>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Trade confirmation popup</div><div class="desc">Show confirmation modal before submitting orders.</div></div>
+            <div class="switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+
+        <div class="card" style="border-color: rgba(239, 68, 68, 0.3);">
+          <h3 style="color: var(--red-hi);">⚠ Danger Zone</h3>
+          <div class="pref-row">
+            <div class="info"><div class="label">Disable trading</div><div class="desc">Temporary cooldown. Useful for taking a break.</div></div>
+            <button class="btn-ghost" style="color: var(--amber);" onclick="toast('Cooldown enabled for 24h', 'info')">Cool Down</button>
+          </div>
+          <div class="pref-row">
+            <div class="info"><div class="label">Close account</div><div class="desc">Permanently delete account. Withdraw all funds first.</div></div>
+            <button class="btn-ghost" style="color: var(--red-hi); border-color: rgba(239, 68, 68, 0.4);" onclick="confirmClose()">Close Account</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- API -->
+      <div class="section" id="sec-api">
+        <h2>API Keys</h2>
+        <div class="desc">Programmatic access to MX1. Create keys with limited scope and IP allowlisting.</div>
+
+        <div class="card">
+          <h3 style="display: flex; justify-content: space-between; align-items: center;">
+            Your API Keys
+            <button class="btn-primary" style="padding: 8px 16px;" onclick="toast('New API key created. Secret shown once.', 'success', 5000)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              New Key
+            </button>
+          </h3>
+
+          <div class="api-row">
+            <div class="head">
+              <span class="name">Trading Bot (Read + Trade)</span>
+              <span class="chip green">ACTIVE</span>
+            </div>
+            <div class="key">mx1_live_a1b2...9f3e · Created 18 days ago · Last used 2h ago</div>
+          </div>
+
+          <div class="api-row">
+            <div class="head">
+              <span class="name">Portfolio Tracker (Read-only)</span>
+              <span class="chip gray">READ-ONLY</span>
+            </div>
+            <div class="key">mx1_live_7c4d...a12f · Created 3 months ago · Last used yesterday</div>
+          </div>
+
+          <div style="padding: 10px 12px; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.25); border-radius: 8px; font-size: 11px; color: var(--amber); line-height: 1.5; margin-top: 12px;">
+            ⚠ Never share your secret key. Revoke immediately if leaked. Use IP allowlisting for production bots.
+          </div>
+        </div>
+      </div>
+
+      <!-- REFERRALS -->
+      <div class="section" id="sec-referrals">
+        <h2>Referrals</h2>
+        <div class="desc">Earn 30% of MX1 trading fees from every friend you refer — for life.</div>
+
+        <div class="card">
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px;">
+            <div style="padding: 16px; background: var(--bg-2); border-radius: 10px;">
+              <div style="font-size: 11px; color: var(--text-faint); letter-spacing: 0.5px; text-transform: uppercase;">Referred</div>
+              <div style="font-family: var(--font-mono); font-size: 24px; font-weight: 700; margin-top: 6px;">0</div>
+            </div>
+            <div style="padding: 16px; background: var(--bg-2); border-radius: 10px;">
+              <div style="font-size: 11px; color: var(--text-faint); letter-spacing: 0.5px; text-transform: uppercase;">Earned</div>
+              <div style="font-family: var(--font-mono); font-size: 24px; font-weight: 700; margin-top: 6px; color: var(--green-hi);">$0.00</div>
+            </div>
+            <div style="padding: 16px; background: var(--bg-2); border-radius: 10px;">
+              <div style="font-size: 11px; color: var(--text-faint); letter-spacing: 0.5px; text-transform: uppercase;">Commission Rate</div>
+              <div style="font-family: var(--font-mono); font-size: 24px; font-weight: 700; margin-top: 6px; background: var(--grad-logo); -webkit-background-clip: text; background-clip: text; color: transparent;">30%</div>
+            </div>
+          </div>
+
+          <h3>Your Referral Link</h3>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" value="https://mx1.exchange/ref/ZT-84729301" readonly style="flex: 1; padding: 12px 14px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font-mono); font-size: 12px; outline: none;" />
+            <button class="btn-primary" onclick="toast('Link copied!', 'success')">Copy Link</button>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;">
+            <button class="btn-ghost" onclick="toast('Shared to X', 'info')">Share on X</button>
+            <button class="btn-ghost" onclick="toast('Shared to Telegram', 'info')">Share on Telegram</button>
+            <button class="btn-ghost" onclick="toast('Shared to Reddit', 'info')">Share on Reddit</button>
+            <button class="btn-ghost" onclick="toast('Email draft opened', 'info')">Email</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+  const s = MX1.session;
+  // Fill profile
+  document.getElementById('profAvatar').textContent = s.initials;
+  document.getElementById('profName').textContent = s.name;
+  document.getElementById('profEmail').textContent = s.email;
+  document.getElementById('profUid').textContent = s.uid;
+  document.getElementById('dispName').value = s.name;
+  document.getElementById('dispEmail').value = s.email;
+  document.getElementById('emailShown').textContent = s.email;
+
+  // KYC chip based on level
+  const chipEl = document.getElementById('kycChip');
+  if (s.kycLevel >= 3) { chipEl.className = 'chip green'; chipEl.textContent = 'LEVEL 3 · FULL'; }
+  else if (s.kycLevel >= 2) { chipEl.className = 'chip blue'; chipEl.textContent = 'LEVEL 2 · ID VERIFIED'; }
+
+  // Sidebar navigation
+  document.querySelectorAll('.acc-sidebar button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.acc-sidebar button').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.acc-content .section').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      document.getElementById('sec-' + b.dataset.section).classList.add('active');
+      if (window.innerWidth <= 900) window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
+  // Honor ?section= param
+  const paramSection = new URLSearchParams(location.search).get('section');
+  if (paramSection) {
+    const btn = document.querySelector(`.acc-sidebar button[data-section="${paramSection}"]`);
+    if (btn) btn.click();
+  }
+
+  // KYC upload modal
+  window.openKycUpload = function(level) {
+    modal({
+      title: `KYC Level ${level} · Identity Verification`,
+      width: 560,
+      body: `
+        <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 16px; line-height: 1.5;">
+          Upload a clear photo of your government-issued ID (passport, driver's license, or national ID). We'll also take a quick selfie video for liveness detection.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+          <div>
+            <label style="font-size: 11px; color: var(--text-faint); letter-spacing: 0.5px; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 6px;">Document Type</label>
+            <select style="width: 100%; padding: 10px 12px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px;"><option>Passport</option><option>Driver's License</option><option>National ID Card</option></select>
+          </div>
+          <div>
+            <label style="font-size: 11px; color: var(--text-faint); letter-spacing: 0.5px; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 6px;">Issuing Country</label>
+            <select style="width: 100%; padding: 10px 12px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px;"><option>United States</option><option>United Kingdom</option><option>Canada</option></select>
+          </div>
+        </div>
+
+        <div class="dropzone" id="dropFront" onclick="this.querySelector('input').click()">
+          <input type="file" accept="image/*" style="display: none;" onchange="handleKycUpload(this, 'Front')" />
+          <div class="icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
+          </div>
+          <div class="title">Upload Front of ID</div>
+          <div class="sub">PNG, JPG, or PDF · max 8MB</div>
+        </div>
+
+        <div style="height: 10px;"></div>
+
+        <div class="dropzone" onclick="this.querySelector('input').click()">
+          <input type="file" accept="image/*" style="display: none;" onchange="handleKycUpload(this, 'Back')" />
+          <div class="icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
+          </div>
+          <div class="title">Upload Back of ID</div>
+          <div class="sub">Not required for passports</div>
+        </div>
+
+        <div style="height: 10px;"></div>
+
+        <div class="dropzone" onclick="startSelfie(this)">
+          <div class="icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <div class="title">Record Selfie Video</div>
+          <div class="sub">3-second liveness check</div>
+        </div>
+
+        <div style="margin-top: 14px; padding: 10px 12px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; font-size: 11px; color: var(--sky); line-height: 1.5;">
+          🔒 Documents are encrypted end-to-end and reviewed by our KYC team within 1–4 hours. We never sell or share this data.
+        </div>
+      `,
+      actions: [
+        { label: 'Cancel', class: 'btn-ghost' },
+        { label: 'Submit for Review', class: 'btn-primary', onClick: close => {
+          close();
+          const s = MX1.session;
+          s.kycLevel = 2;
+          MX1.session = s;
+          toast('KYC submitted. Estimated review: 1-4 hours.', 'success', 4000);
+          setTimeout(() => location.reload(), 1500);
+        }}
+      ]
+    });
+  };
+
+  window.handleKycUpload = function(input, side) {
+    const f = input.files[0];
+    if (f) {
+      const dz = input.closest('.dropzone');
+      dz.querySelector('.title').textContent = '✓ ' + side + ': ' + f.name;
+      dz.querySelector('.sub').textContent = (f.size / 1024).toFixed(0) + ' KB · Ready for upload';
+      dz.querySelector('.icon').style.background = 'rgba(16, 185, 129, 0.15)';
+      dz.querySelector('.icon').style.color = 'var(--green-hi)';
+      dz.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+    }
+  };
+
+  window.startSelfie = function(el) {
+    el.querySelector('.title').textContent = '● Recording liveness... 3s';
+    el.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+    setTimeout(() => {
+      el.querySelector('.title').textContent = '✓ Selfie captured';
+      el.querySelector('.sub').textContent = 'Liveness verified';
+      el.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+    }, 3000);
+  };
+
+  window.confirmClose = function() {
+    modal({
+      title: '⚠ Close Account',
+      width: 440,
+      body: `
+        <p style="color: var(--text-dim); line-height: 1.6; font-size: 13px;">
+          This will permanently close your account. Before proceeding:
+        </p>
+        <ul style="margin: 14px 0; padding-left: 20px; color: var(--text-dim); font-size: 13px; line-height: 1.8;">
+          <li>Withdraw all assets (balance: <strong style="color: var(--text);">$${MX1.session.balance.toLocaleString()}</strong>)</li>
+          <li>Close all open positions and orders</li>
+          <li>Export any trade history you need</li>
+        </ul>
+        <p style="color: var(--red-hi); font-size: 12px; font-weight: 600;">This cannot be undone.</p>
+      `,
+      actions: [
+        { label: 'Cancel', class: 'btn-ghost' },
+        { label: 'I understand, close account', class: 'btn-danger', onClick: close => { close(); toast('Account closure request submitted. Support will email you within 24h.', 'info', 4000); } }
+      ]
+    });
+  };
+</script>
+</body>
+</html>
